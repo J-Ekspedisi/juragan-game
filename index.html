@@ -320,7 +320,7 @@ if(d%7==0){genOffers();G.comp.forEach(c=>{const a=ri(1,4);if(a==1&&c.cash>6e7){c
 if(G.fxr)Object.keys(G.fxr).forEach(c=>{const b=Object.values(INT).find(i=>i.cur==c).r;G.fxr[c]=cl(G.fxr[c]*(1+(R()-.5)*.02),b*.7,b*1.3)});G.mDay=0;G.cDay=0;
 if(G.contract&&G.t>=G.contract.end){const c=G.contract;if(c.done>=c.vol){tx('Pendapatan Kontrak','Selesai kontrak '+c.n,Math.round(c.vol*c.rate*.1));G.contracts++;G.xp+=400;G.rep+=3;log('Kontrak '+c.n+' selesai')}else{tx('Kompensasi','Penalti kontrak '+c.n,-c.pen);G.rep-=6;log('Kontrak '+c.n+' gagal')}G.contract=null}
 if(G.cash<0)G.neg++;else G.neg=0;
-if(G.neg>=14&&!G.over){G.over=true;modal('<h2>💥 Bangkrut</h2><p>Kas negatif selama 14 hari. Perusahaan Anda bangkrut. Save tidak dihapus.</p>'+bkWhy()+'<p>Paket terkirim: '+G.delivered+' - Level '+G.lvl+'</p><button class="b" onclick="restruct()">Restrukturisasi (utang -50%, reputasi -20, kas Rp20.000.000)</button><button class="b s" onclick="endCareer()">Simpan statistik & ke menu</button>')}
+if(G.neg>=14&&!G.over){G.over=true;modal('<h2>💥 Bangkrut</h2><p>Kas negatif selama 14 hari. Perusahaan Anda bangkrut. Save tidak dihapus.</p>'+bkWhy()+'<p>Paket terkirim: '+G.delivered+' - Level '+G.lvl+'</p><button class="b" onclick="restruct()">Restrukturisasi gratis (utang -50%, reputasi -20, kas Rp20.000.000, separuh kendaraan dijual)</button><button class=\"b\" onclick=\"rescue()\">💎 Selamatkan perusahaan</button><button class="b s" onclick="endCareer()">Simpan statistik & ke menu</button>')}
 ACH.forEach(a=>{if(!G.ach[a[0]]&&a[2](G)){G.ach[a[0]]=1;G.xp+=200;log('Prestasi: '+a[1])}});
 LM.forEach(l=>{if(!G.lm[l[0]]&&l[2](G)){G.lm[l[0]]=1;tx('Hadiah','Misi: '+l[1],l[3]);G.xp+=l[4];log('Misi selesai: '+l[1])}});
 const nl=1+Math.floor(Math.sqrt(G.xp/150));if(nl>G.lvl){G.lvl=nl;log('Naik ke level '+nl)}
@@ -2421,6 +2421,168 @@ P.profil=function(){
   setTimeout(function(){window.tkSync&&tkSync()},0)}
  window.PROF.forEach(function(f){try{h+=f()}catch(e){}});
  return h};
+})();
+</script>
+<script>
+/* ===== Musibah & ganti rugi: ada naik, ada turun ===== */
+(function(){
+if(window.__musibah)return;window.__musibah=1;
+const sc=()=>{try{return evScale()}catch(e){return 1}},rpx=a=>Math.round(a*sc()/1e5)*1e5;
+const loss=(a,d)=>{const v=rpx(a);tx('Event',d,-v);return v},gain=(a,d)=>{const v=rpx(a);tx('Hadiah',d,v);return v};
+const rep=n=>{G.rep=cl(G.rep+n,0,100)},dem=(m,d)=>{G.fx.dem={m,u:G.t+d*24}};
+const slow=h=>{const u=G.t+h;if(!(G.fx.whd&&G.fx.whd.u>u))G.fx.whd={u}};
+const fq=(e,d)=>{ens();G.cmp.q.push({e,d:Math.floor(G.t/24)+d})};
+const rw=()=>G.wh.length?pick(G.wh):{city:'',name:'gudang'};
+const inWh=c=>p=>((p.st==2||p.st==3)&&p.o==c)||(p.st==5&&p.d==c);
+const dmg=c=>{const v=(G.veh||[]).filter(v=>v.c>=20);if(v.length){const x=pick(v);x.c=Math.min(x.c,c)}};
+const drivers=()=>G.staff.filter(s=>RL[s.role]&&RL[s.role].v);
+const rm=(pred,frac,per)=>{const pool=G.pkgs.filter(pred),n=Math.ceil(pool.length*frac),lost=[];
+ while(lost.length<n&&pool.length)lost.push(pool.splice(ri(0,pool.length-1),1)[0]);
+ let comp=0;lost.forEach(p=>{adv(p,10);G.failed++;comp+=Math.min(per,Math.round((p.tf||0)*3))});
+ if(lost.length){G.pkgs=G.pkgs.filter(p=>!lost.includes(p));G.recent=lost.concat(G.recent).slice(0,30)}
+ if(comp)tx('Kompensasi','Ganti rugi '+lost.length+' paket (musibah)',-comp);
+ return{n:lost.length,comp}};
+const X=(n,d,a,b,gate,fu)=>{const e={n,d,o:[{t:a[0],c:a[1],p:a[2],ok:a[3],no:a[4]},{t:b[0],c:0,p:0,no:b[1]}]};
+ if(fu)e.fu=1;else if(gate)Object.defineProperty(e,'fu',{get:()=>!gate(),enumerable:true,configurable:true});
+ EV.push(e);return e};
+const L2=()=>G.lvl>=2;
+
+/* 1. Kebakaran gudang */
+const fire=()=>{const w=rw(),r=rm(inWh(w.city),.4,2e6),l=loss(25e6,'Kerusakan bangunan & peralatan akibat kebakaran');slow(96);rep(-3);fq('Bangkit pascamusibah',4);
+ return 'Api merembet di '+w.name+': '+r.n+' paket hangus (ganti rugi '+rp(r.comp)+'), bangunan & peralatan '+rp(l)+'. Sortir setengah kecepatan 4 hari.'};
+X('Kebakaran gudang','Korsleting listrik memicu api di gudang! Asap mulai membumbung.',
+ ['Panggil damkar & pakai APAR',6e6,.65,()=>{const l=loss(6e6,'Perbaikan sudut gudang terbakar');slow(24);return 'Api cepat padam. Hanya satu sudut gudang hangus ('+rp(l)+'), sortir lambat 1 hari.'},fire],
+ ['Selamatkan orang dulu',fire],()=>L2()&&G.wh.length>0);
+
+/* 2-3. Klaim ganti rugi & gugatan */
+X('Klaim ganti rugi pelanggan','Pelanggan korporat menuntut ganti rugi: kiriman elektronik bernilai tinggi tiba dalam keadaan rusak.',
+ ['Negosiasi & bayar sebagian',2e6,.7,()=>{const l=loss(8e6,'Ganti rugi barang pelanggan');rep(1);return 'Disepakati damai, ganti rugi '+rp(l)+'. Pelanggan menghargai tanggung jawab Anda.'},()=>{const l=loss(18e6,'Ganti rugi barang pelanggan');rep(-2);return 'Tawaran ditolak, harus bayar penuh '+rp(l)+'.'}],
+ ['Tolak klaim',()=>{rep(-2);if(R()<.5){fq('Gugatan di pengadilan',4);return 'Klaim ditolak. Pelanggan menempuh jalur hukum.'}return 'Klaim ditolak, pelanggan pergi dan menulis ulasan buruk.'}],()=>G.delivered>=30);
+X('Gugatan di pengadilan','Pelanggan menggugat ke pengadilan negeri atas kiriman rusak.',
+ ['Sewa pengacara',10e6,.6,()=>{rep(1);return 'Hakim menolak gugatan. Nama baik terjaga.'},()=>{const l=loss(25e6,'Putusan ganti rugi pengadilan');rep(-2);return 'Gugatan dikabulkan: ganti rugi '+rp(l)+'.'}],
+ ['Damai di luar sidang',()=>{const l=loss(12e6,'Ganti rugi damai');return 'Damai dengan ganti rugi '+rp(l)+'.'}],null,true);
+
+/* 4. Pencurian gudang */
+const theft=()=>{const w=rw(),r=rm(inWh(w.city),.2,1.5e6),l=loss(3e6,'Kerusakan pintu & kunci gudang');rep(-1);return 'Maling membobol '+w.name+': '+r.n+' paket raib (ganti rugi '+rp(r.comp)+') dan kerusakan '+rp(l)+'.'};
+X('Pencurian di gudang','Maling membobol gudang malam hari dan membawa sejumlah paket.',
+ ['Tambah satpam & CCTV',4e6,.7,()=>{rep(1);return 'Maling tertangkap warga dan barang kembali.'},theft],
+ ['Lapor polisi saja',theft],()=>L2()&&G.wh.length>0);
+
+/* 5. Begal muatan */
+const begal=()=>{const r=rm(p=>p.st==4,.15,2e6),l=loss(6e6,'Kerusakan kendaraan akibat pembegalan');dmg(40);rep(-2);return 'Muatan dibegal: '+r.n+' paket hilang (ganti rugi '+rp(r.comp)+'), kendaraan rusak '+rp(l)+'.'};
+X('Muatan truk dibegal','Kendaraan pengangkut dihadang kawanan begal di jalur sepi.',
+ ['Sewa pengawalan & lapor polisi',5e6,.5,()=>{rep(1);return 'Pelaku tertangkap dan muatan kembali utuh.'},begal],
+ ['Hanya lapor polisi',begal],()=>L2()&&G.pkgs.some(p=>p.st==4));
+
+/* 6. Kecelakaan pihak ketiga */
+X('Kecelakaan pihak ketiga','Kendaraan Anda menyenggol mobil warga. Pemilik mobil minta ganti rugi.',
+ ['Ajukan klaim asuransi armada',1.5e6,.8,()=>{const l=loss(4e6,'Ganti rugi pihak ketiga (sebagian ditanggung asuransi)');dmg(60);return 'Asuransi armada menanggung sebagian. Sisa '+rp(l)+'.'},()=>{const l=loss(15e6,'Ganti rugi pihak ketiga');dmg(30);rep(-1);return 'Klaim ditolak karena dokumen kurang. Bayar sendiri '+rp(l)+'.'}],
+ ['Selesaikan kekeluargaan',()=>{const l=loss(10e6,'Ganti rugi pihak ketiga (kekeluargaan)');dmg(40);return 'Selesai damai. Biaya '+rp(l)+'.'}],()=>(G.veh||[]).length>0);
+
+/* 7. Kurir kecelakaan */
+X('Kurir kecelakaan berat','Seorang kurir jatuh dan terluka parah saat mengantar paket di tengah hujan.',
+ ['Tanggung biaya rumah sakit',7e6,1,()=>{const s=pick(drivers());s.leave=ri(7,12);s.sick=1;rep(1);return s.name+' dirawat dan cuti '+s.leave+' hari. Karyawan lain makin loyal.'}],
+ ['Santunan minimal',()=>{const s=pick(drivers());loss(1.5e6,'Santunan kurir');s.leave=ri(10,14);s.sick=1;s.prod=Math.max(20,s.prod-8);rep(-3);return s.name+' cuti '+s.leave+' hari, produktivitas turun, reputasi anjlok.'}],()=>drivers().length>0);
+
+/* 8. Banjir bandang gudang */
+const flood=()=>{const w=rw(),r=rm(inWh(w.city),.3,1.5e6),l=loss(10e6,'Pembersihan & perbaikan gudang pascabanjir');slow(72);rep(-2);fq('Bangkit pascamusibah',4);return 'Air merendam '+w.name+': '+r.n+' paket rusak (ganti rugi '+rp(r.comp)+'), perbaikan '+rp(l)+'. Sortir lambat 3 hari.'};
+X('Banjir bandang di gudang','Hujan deras berhari-hari: air bah merendam gudang dan jalan sekitar.',
+ ['Pindahkan paket ke tempat tinggi',6e6,.7,()=>{const l=loss(3e6,'Pembersihan gudang pascabanjir');slow(24);return 'Paket selamat. Pembersihan '+rp(l)+', sortir lambat 1 hari.'},flood],
+ ['Tunggu air surut',flood],()=>L2()&&G.wh.length>0);
+
+/* 9. Gempa besar */
+const quake=()=>{const w=rw(),r=rm(inWh(w.city),.25,1.5e6),l=loss(20e6,'Perbaikan gudang pascagempa');slow(96);G.pkgs.forEach(p=>{if(p.st==4)p.eta+=8});sick(3);sick(3);rep(-2);fq('Misi kemanusiaan',3);return 'Gempa merusak '+w.name+': '+r.n+' paket rusak (ganti rugi '+rp(r.comp)+'), perbaikan '+rp(l)+'. Paket di jalan tertunda 8 jam, 2 staf trauma.'};
+X('Gempa besar','Gempa kuat mengguncang. Dinding gudang retak dan jalur utama terputus.',
+ ['Aktifkan tanggap darurat',12e6,.75,()=>{const l=loss(6e6,'Perbaikan retak gudang');slow(24);fq('Misi kemanusiaan',3);return 'Evakuasi lancar, tidak ada korban. Perbaikan '+rp(l)+'.'},quake],
+ ['Tunggu info resmi',quake],()=>L2()&&G.wh.length>0);
+
+/* 10. Erupsi gunung */
+const ash=()=>{G.pkgs.forEach(p=>{if(p.st==4)p.eta+=10});dmg(55);dem(.7,4);const l=loss(5e6,'Pembersihan armada dari abu vulkanik');fq('Misi kemanusiaan',3);return 'Abu menutup jalur: paket tertunda 10 jam, mesin kemasukan abu, permintaan -30% 4 hari, biaya '+rp(l)+'.'};
+X('Erupsi gunung berapi','Gunung berapi erupsi: abu vulkanik menutup jalan dan bandara terdekat.',
+ ['Alihkan rute & siapkan masker',7e6,.7,()=>{G.pkgs.forEach(p=>{if(p.st==4)p.eta+=3});return 'Armada dialihkan. Paket hanya tertunda 3 jam.'},ash],
+ ['Tahan armada',ash],L2);
+
+/* 11. Kargo diterjang badai (internasional) */
+X('Kapal kargo diterjang badai','Kapal pengangkut ekspor-impor Anda diterjang badai; sebagian kontainer jatuh ke laut.',
+ ['Klaim asuransi kargo',4e6,.7,()=>{const l=loss(7e6,'Selisih ganti rugi kargo');return 'Asuransi kargo menanggung sebagian besar. Selisih '+rp(l)+'.'},()=>{const l=loss(30e6,'Ganti rugi kargo ekspor');rep(-3);return 'Klaim tidak tercakup polis. Bayar sendiri '+rp(l)+'.'}],
+ ['Ganti dari kas sendiri',()=>{const l=loss(22e6,'Ganti rugi kargo ekspor');rep(1);return 'Anda mengganti penuh '+rp(l)+'. Pelanggan terkesan.'}]).intl=true;
+
+/* 12. Kecurangan internal */
+X('Kecurangan internal','Audit kecil menemukan selisih kas: seorang karyawan diduga menggelapkan setoran COD.',
+ ['Audit internal & lapor polisi',3e6,.7,()=>{const l=loss(4e6,'Dana COD hilang (sebagian kembali)'),c=G.staff.filter(s=>s.role!='spv');if(c.length){const x=pick(c);G.staff=G.staff.filter(y=>y!==x);return 'Pelaku ('+x.name+') ketahuan dan dipecat. Kerugian '+rp(l)+'.'}return 'Kerugian '+rp(l)+'.'},()=>{const l=loss(14e6,'Dana COD hilang');return 'Bukti kurang kuat, pelaku lolos. Kerugian '+rp(l)+'.'}],
+ ['Tegur lisan saja',()=>{const l=loss(14e6,'Dana COD hilang');return 'Penggelapan berlanjut. Kerugian '+rp(l)+'.'}],()=>G.staff.length>=3);
+
+/* 13. Wabah di kalangan staf */
+const sw=()=>{const n=Math.max(2,Math.ceil(G.staff.length*.25));for(let i=0;i<n;i++)sick(ri(2,5));return n+' karyawan tumbang 2-5 hari.'};
+X('Wabah penyakit di kalangan staf','Demam berdarah dan flu menyebar cepat di antara karyawan.',
+ ['Fogging, vitamin & cek kesehatan',3e6,.8,()=>{sick(2);return 'Penyebaran tertahan. Hanya satu orang sakit.'},sw],
+ ['Tunggu reda',sw],()=>G.staff.length>=4);
+
+/* 14. Piutang macet */
+X('Mitra korporat gagal bayar','Pelanggan korporat bangkrut dan tagihan pengiriman Anda macet.',
+ ['Tempuh jalur hukum',5e6,.45,()=>{const l=loss(6e6,'Piutang macet (sebagian tertagih)');return 'Sebagian aset debitur disita. Kerugian bersih '+rp(l)+'.'},()=>{const l=loss(22e6,'Piutang macet');return 'Debitur tak punya aset. Tagihan hangus '+rp(l)+'.'}],
+ ['Hapus buku',()=>{const l=loss(18e6,'Piutang macet dihapus buku');return 'Piutang dihapus buku: '+rp(l)+'.'}],()=>G.lvl>=3||G.delivered>=300);
+
+/* 15. Ekonomi turun lalu pulih */
+const dip=()=>{dem(.75,10);fq('Ekonomi pulih',10);return 'Permintaan turun 25% selama 10 hari. Sabar, roda akan berputar.'};
+X('Daya beli melemah','Ekonomi melesu dan daya beli turun: pengiriman berkurang.',
+ ['Promo ongkir hemat',6e6,.6,()=>{dem(.9,10);fq('Ekonomi pulih',10);return 'Promo menahan penurunan: permintaan hanya -10% selama 10 hari.'},dip],
+ ['Hemat & bertahan',dip],L2);
+X('Ekonomi pulih','Ekonomi mulai bangkit dan pesanan kembali ramai.',
+ ['Perkuat kapasitas & promo',5e6,.8,()=>{dem(1.4,7);rep(1);return 'Permintaan +40% selama 7 hari.'},()=>{dem(1.15,7);return 'Permintaan +15% selama 7 hari.'}],
+ ['Jalani saja',()=>{dem(1.15,7);return 'Permintaan +15% selama 7 hari.'}],null,true);
+
+/* Pemulihan setelah musibah */
+X('Bangkit pascamusibah','Setelah musibah, warga, mitra, dan pelanggan setia mengulurkan tangan. Roda kehidupan berputar.',
+ ['Gelar syukuran & promo buka kembali',3e6,.85,()=>{const g=gain(15e6,'Santunan & dukungan mitra');rep(2);G.fx.whd=null;return 'Dukungan mitra '+rp(g)+' cair, reputasi +2, operasional pulih penuh.'},()=>{const g=gain(5e6,'Santunan mitra');rep(1);return 'Dukungan mitra '+rp(g)+' cair, reputasi +1.'}],
+ ['Bangkit sendiri',()=>{rep(1);return 'Perlahan bangkit. Reputasi +1.'}],null,true);
+X('Misi kemanusiaan','Bencana di wilayah lain membutuhkan logistik bantuan dalam jumlah besar.',
+ ['Ambil kontrak resmi pemda',2e6,.8,()=>{const g=gain(25e6,'Kontrak logistik bantuan bencana');rep(2);return 'Kontrak bantuan cair '+rp(g)+', reputasi +2.'},()=>{const g=gain(8e6,'Kontrak logistik bantuan bencana');return 'Kontrak kecil cair '+rp(g)+'.'}],
+ ['Kirim bantuan gratis',()=>{rep(4);dem(1.2,5);return 'Reputasi +4, permintaan +20% selama 5 hari.'}],null,true);
+
+const i0=P.info;P.info=function(){return i0.apply(this,arguments)+'<div class="c"><b>Musibah &amp; ganti rugi</b><br>Kehidupan berputar: kebakaran gudang, banjir bandang, gempa, erupsi, pencurian, pembegalan, kecelakaan, klaim ganti rugi, gugatan, wabah, piutang macet, dan kargo karam bisa muncul sebagai event. Setelah musibah ada kesempatan bangkit, kontrak bantuan, dan ekonomi pulih. Musibah besar baru muncul mulai Level 2.</div>'};
+})();
+</script>
+<script>
+/* ===== Bangkrut bertahap + fitur premium (diamond) ===== */
+(function(){
+if(window.__prem)return;window.__prem=1;
+const PR={ins:80,shield:60,speed:40,grace:50};
+const INS=['Kebakaran gudang','Pencurian di gudang','Muatan truk dibegal','Kecelakaan pihak ketiga','Kurir kecelakaan berat','Banjir bandang di gudang','Gempa besar','Erupsi gunung berapi','Kapal kargo diterjang badai','Klaim ganti rugi pelanggan','Gugatan di pengadilan'];
+const BAD=INS.concat(['Kecurangan internal','Wabah penyakit di kalangan staf','Mitra korporat gagal bayar','Daya beli melemah']);
+const pm=()=>G.prem||(G.prem={ins:0,shield:0});
+const insOn=()=>G&&pm().ins>G.t;
+/* asuransi: tanggung 70% kerugian musibah fisik */
+EV.forEach(e=>{if(!INS.includes(e.n))return;e.o.forEach(o=>['ok','no'].forEach(k=>{const f=o[k];if(!f||f.__w)return;
+ o[k]=Object.assign(function(){window.__mb=1;try{const r=f.apply(this,arguments);return insOn()&&typeof r=='string'?r+' 🛡️ Asuransi menanggung 70% kerugian.':r}finally{window.__mb=0}},{__w:1})}))});
+const tx0=tx;tx=function(k,d,a){if(window.__mb&&a<0&&insOn()&&(k=='Event'||k=='Kompensasi'))return tx0.call(this,k,d+' (asuransi tanggung 70%)',Math.round(a*.3));return tx0.apply(this,arguments)};
+/* tameng musibah */
+const sh0=showEv;showEv=function(){sh0();const e=EV[G.pev];if(e&&BAD.includes(e.n)&&pm().shield>0){const b=document.querySelector('#modal .mb');if(b)b.insertAdjacentHTML('beforeend','<button class="b s" onclick="premShield()">🧯 Pakai Tameng ('+pm().shield+')</button>')}};
+window.premShield=()=>{const e=EV[G.pev];if(!e||pm().shield<1)return;pm().shield--;G.pev=null;log('Tameng musibah menahan: '+e.n);closeM();toast('🧯 '+e.n+' dibatalkan','gold');save();render()};
+/* beli lewat server (potong diamond) */
+window.premBuy=async k=>{if(!G)return;const gm=window.tkMe?tkMe.gem():0;if(gm<PR[k]){toast('Diamond tidak cukup. Beli dulu di Toko.','');return}
+ try{const r=await fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:localStorage.getItem('etid_uid'),act:'spend',k})});if(!r.ok)throw 0;
+  if(k=='ins')pm().ins=Math.max(pm().ins,G.t)+720;
+  if(k=='shield')pm().shield+=3;
+  if(k=='speed'){G.fx.whd=null;G.staff.forEach(s=>{s.leave=0;s.sick=0});G.veh.forEach(v=>{v.c=Math.max(v.c,85)})}
+  if(k=='grace'){if(G.over){G.over=false;G.neg=7}else G.neg=Math.max(0,G.neg-7)}
+  log('Premium: '+k);save();window.tkSync&&tkSync(true);closeM();toast('✅ Berhasil dibeli','gold');render()}
+ catch(e){toast('Belum bisa dibeli: server belum mendukung aksi ini','')}};
+/* penyelamat bangkrut */
+window.rescue=()=>{const l=Math.max(0,14-G.neg);modal('<h2>🚨 '+(G.over?'Bangkrut':'Sisa '+l+' hari')+'</h2><p>'+(G.over?'Kas negatif 14 hari.':'Kas negatif '+G.neg+' hari. Pada hari ke-14 perusahaan bangkrut.')+' Pilih jalan keluar:</p><button class="b" onclick="tkCash(0)">💎 Suntik modal Rp500 juta (💎100)</button><button class="b" onclick="premBuy(\'grace\')">⏳ Masa tenggang +7 hari (💎'+PR.grace+')</button>'+(G.over?'<button class="b s" onclick="restruct()">Restrukturisasi gratis (separuh kendaraan dijual)</button>':'<button class="b s" onclick="closeM()">Tutup</button>'))};
+const tc0=window.tkCashGo;if(tc0)window.tkCashGo=async function(i){await tc0(i);if(G&&G.over&&G.cash>=0){G.over=false;G.neg=0;save();render()}};
+const d0=dayEnd;dayEnd=function(){d0.apply(this,arguments);if(!G.over&&G.pev==null&&(G.neg==5||G.neg==10||G.neg==13))rescue()};
+const x0=extraAct;extraAct=function(){let h=x0.apply(this,arguments);if(G&&!G.over&&G.neg>0)h='<div class="act no" onclick="rescue()"><span>🚨</span><span>Kas negatif hari '+G.neg+'/14 menuju bangkrut. Ketuk untuk opsi penyelamatan.</span></div>'+h;return h};
+/* restrukturisasi gratis jadi lebih pahit */
+const rs0=restruct;restruct=function(){G.veh=G.veh.filter((v,i)=>v.rent||i%2==0);rs0()};
+/* kartu premium di Toko */
+const row=(k,i,n,d,st)=>'<div class="tkr" style="margin-top:8px"><div style="flex:1"><b>'+i+' '+n+'</b><div class="k">'+d+(st?'<br><b>'+st+'</b>':'')+'</div></div><button class="b" onclick="premBuy(\''+k+'\')">💎 '+PR[k]+'</button></div>';
+const card=()=>{if(!G)return'';const p=pm();return '<div class="c"><b>⭐ Fitur Premium</b>'
+ +row('ins','🛡️','Asuransi Bencana 30 hari','Menanggung 70% kerugian kebakaran, banjir, gempa, pencurian, kecelakaan, dan ganti rugi.',insOn()?'Aktif sampai '+date(p.ins):'')
+ +row('shield','🧯','Tameng Musibah x3','Batalkan 3 event buruk saat pop-up muncul.','Sisa '+p.shield)
+ +row('speed','⚡','Percepat Pemulihan','Sortir normal lagi, staf sembuh, kendaraan diperbaiki.','')
+ +row('grace','⏳','Masa Tenggang +7 hari','Mundurkan hitung mundur bangkrut 7 hari.','')+'</div>'};
+if(P.toko){const t0=P.toko;P.toko=function(){return t0.apply(this,arguments)+card()}}
 })();
 </script>
 </body></html>
