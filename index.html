@@ -274,7 +274,7 @@ G.veh.forEach(v=>{if((v.type=='pesawat'||v.type=='kapal')&&v.c>=20&&G.pkgs.some(
 let cpM=0;if(work)G.staff.filter(s=>s.on&&RL[s.role].mit).forEach(s=>{cpM+=Math.ceil(VT.motor.cap/3*(.6+s.prod/100)*tm(s,'sp')*(s.en<50?.7:1))});cp+=cpM;G.mSh=cp>0?cpM/cp:0;
 let sc=work?(G.staff.some(s=>s.on&&s.role=='admin')?6:2)+G.staff.filter(s=>s.on&&s.role=='sortir').reduce((a,s)=>a+Math.round(8*s.prod/70),0):0;
 const wc=G.wh.reduce((a,w)=>a+w.cap,0);sc=Math.floor(sc*sortF());let wu=G.pkgs.filter(p=>[2,3,5].includes(p.st)).length,pk=cp;
-if(h>=6&&h<22){const dm=(G.fx.dem&&G.fx.dem.u>G.t?G.fx.dem.m:1)*seasonM(),sh=share();let lam=(1.5+G.branches.reduce((a,c)=>a+(CT[c]?CT[c][2]:5),0)*.14+Math.min(G.lvl,8)*.3)*cl(sh/.25,.35,1.8)*dm*(1+.08*Math.min(4,(G.hubs||[]).length))*(.6+G.rep/100)*Math.pow(1/G.pm,1.2);if(G.contract)lam+=G.contract.vol/G.contract.dur/16;let n=Math.floor(lam)+(R()<lam%1?1:0);for(;n>0&&G.pkgs.filter(p=>p.st==0).length<300;n--)mkPkg()}
+if(h>=6&&h<22){const dm=(G.fx.dem&&G.fx.dem.u>G.t?G.fx.dem.m:1)*seasonM()*(window.mkM?mkM():1),sh=share();let lam=(1.5+G.branches.reduce((a,c)=>a+(CT[c]?CT[c][2]:5),0)*.14+Math.min(G.lvl,8)*.3)*cl(sh/.25,.35,1.8)*dm*(1+.08*Math.min(4,(G.hubs||[]).length))*(.6+G.rep/100)*Math.pow(1/G.pm,1.2);if(G.contract)lam+=G.contract.vol/G.contract.dur/16;let n=Math.floor(lam)+(R()<lam%1?1:0);for(;n>0&&G.pkgs.filter(p=>p.st==0).length<300;n--)mkPkg()}
 if(h>=6&&h<22&&G.intl.length&&G.veh.some(v=>(v.type=='pesawat'||v.type=='kapal')&&v.c>=20)&&R()<Math.min(.9,.3*G.intl.length*(.6+G.rep/100)))mkIntl();const fin=[];
 G.pkgs.forEach(p=>{switch(p.st){
 case 0:if(pk>0){pk--;adv(p,1)}else if(++p.wait>48){adv(p,9);G.failed++;G.rep-=.15;fin.push(p)}break;
@@ -1805,6 +1805,62 @@ try{const s=P.set;P.set=function(){return s.apply(this,arguments)+card()}}catch(
 const mc=()=>{const b=document.querySelector('#menu .mb');if(b&&!b.querySelector('.pcloud'))b.insertAdjacentHTML('beforeend',card())};
 try{const m=menu;menu=function(){m.apply(this,arguments);mc()}}catch(e){}
 if(document.querySelector('#menu.on'))mc();
+})();
+</script>
+<script>
+/* ===== V4.4: Pemasaran (iklan lokal, media sosial, sponsor event, endorse, iklan per kota) ===== */
+(()=>{
+const CP=[
+ {id:'lok',i:'📋',n:'Iklan lokal',d:'Spanduk dan brosur di sekitar cabang.',b:.12,days:7,f:.35,min:5e5,cd:3,lv:1,rep:0},
+ {id:'dig',i:'📱',n:'Iklan media sosial & radio',d:'Jangkauan lebih luas ke pelanggan baru.',b:.22,days:7,f:.4,min:1.5e6,cd:5,lv:2,rep:1},
+ {id:'spo',i:'🎪',n:'Sponsor event',d:'Pasang logo di bazar, festival, atau lomba lari. Lebih ampuh saat musim ramai.',b:.25,se:.4,days:5,f:.4,min:2.5e6,cd:10,lv:2,rep:2},
+ {id:'sel',i:'🤳',n:'Endorse selebgram',d:'Kurirmu tampil di konten selebgram. Peluang sukses 80%. Bila gagal (kontroversi), efeknya kecil dan reputasi turun.',b:.45,days:10,f:.45,min:4e6,cd:14,lv:3,rep:3,p:.8,fb:.1,fr:-3},
+ {id:'art',i:'🌟',n:'Endorse artis papan atas',d:'Wajah artis ternama di iklanmu. Peluang sukses 70%. Risiko reputasi lebih besar bila gagal.',b:.8,days:14,f:.5,min:12e6,cd:21,lv:5,rep:5,p:.7,fb:.15,fr:-6}
+];
+const KT={id:'kota',i:'📍',n:'Iklan per kota',d:'Fokus ke satu kota cabang, cocok untuk kota yang sedang diserbu kompetitor.',b:.5,days:7,f:.35,min:5e5,cd:5,lv:2,rep:0,city:1};
+const ALL=CP.concat([KT]);
+let selC='';
+const mkE=()=>{if(!G.mk)G.mk={a:[],cd:{},sp:0,n:0};G.mk.a=G.mk.a.filter(x=>x.u>G.t);return G.mk};
+const avgRev=()=>{const h=(G.hist||[]).slice(-7).map(x=>x.r).filter(x=>x>0);return h.length?h.reduce((a,b)=>a+b,0)/h.length:Math.max(1.5e6,(G.lvl||1)*1e6)};
+const wOf=c=>{if(!G.branches.includes(c))return 0;const s=G.branches.reduce((a,x)=>a+(CT[x]?CT[x][2]:5),0)||1;return (CT[c]?CT[c][2]:5)/s};
+const seas=()=>{const s=curSeason();return !!(s&&s.m>1)};
+const bonus=(c,city)=>{let b=c.b;if(c.se&&seas())b=c.se;if(c.city)b*=wOf(city);return b};
+const cost=(c,city)=>Math.max(c.min,Math.round(avgRev()*c.days*bonus(c,city)*c.f/1e5)*1e5);
+const pc=b=>Math.round(b*100)+'%';
+/* pengganda permintaan dari semua kampanye aktif (dipakai mesin permintaan game), maksimal x1,8 */
+window.mkM=()=>{const k=G&&G.mk;if(!k||!k.a||!k.a.length)return 1;let m=1;k.a.forEach(x=>{if(x.u>G.t)m*=1+(+x.b||0)});return Math.min(m,1.8)};
+window.mkSel=c=>{selC=c;render()};
+window.mkGo=(id,city)=>{if(!G||G.over)return;const k=mkE(),c=ALL.find(x=>x.id==id);if(!c)return;
+ if(G.lvl<c.lv){toast('🔒 Terbuka di Level '+c.lv,'');return}
+ if(c.city&&(!city||!G.branches.includes(city))){toast('Pilih kota cabang dulu','');return}
+ const key=c.city?'kota:'+city:c.id;
+ if((k.cd[key]||0)>G.t){toast('Kampanye ini masih jeda','');return}
+ const co=cost(c,city);if(G.cash<co){toast('Kas tidak cukup','');return}
+ const q=G.pkgs.filter(p=>p.st==0).length;
+ if(q>30&&!confirm('Antrean pickup sudah '+q+' paket. Iklan bisa membuat paket makin telat dan reputasi turun. Tetap pasang?'))return;
+ tx('Pemasaran','Kampanye: '+c.n+(city?' ('+city+')':''),-co);
+ let b=bonus(c,city),rep=c.rep,ok=true;
+ if(c.p!=null&&R()>=c.p){ok=false;b=c.fb;rep=c.fr}
+ G.rep=cl(G.rep+rep,0,100);
+ k.a.push({id:c.id,n:c.n+(city?' · '+city:''),b,u:G.t+c.days*24});
+ k.cd[key]=G.t+(c.days+c.cd)*24;k.sp+=co;k.n++;
+ const m=ok?'📣 '+c.n+(city?' di '+city:'')+' berjalan: permintaan +'+pc(b)+' selama '+c.days+' hari':'😬 '+c.n+' kurang berhasil (kontroversi): permintaan hanya +'+pc(b)+', reputasi turun';
+ log(m);toast(m,ok?'gold':'');try{SM.play(ok?'mission':'notif')}catch(e){}render()};
+const camp=c=>{const k=mkE(),lock=G.lvl<c.lv,key=c.city?'kota:'+selC:c.id,cdl=Math.ceil(((k.cd[key]||0)-G.t)/24),busy=cdl>0&&!lock,co=cost(c,c.city?selC:null);
+ const eb=bonus(c,c.city?selC:null),bt=c.se&&seas()?' (musim ramai: +'+pc(c.se)+')':'';
+ return '<div class="c"><b>'+c.i+' '+c.n+'</b> <span class="bd '+(lock?'in':'ok')+'">'+(lock?'Level '+c.lv:'Lv '+c.lv+'+')+'</span><div class="k">'+c.d+'</div><div class="k">Permintaan <b>+'+pc(eb)+'</b>'+bt+' selama '+c.days+' hari · Jeda '+c.cd+' hari setelahnya</div>'
+  +(c.city?(G.branches.length<2?'<div class="k">Butuh minimal 2 cabang.</div>':'<select onchange="mkSel(this.value)">'+G.branches.map(x=>'<option'+(x==selC?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select>'):'')
+  +'<button class="b" '+((lock||busy||(c.city&&G.branches.length<2))?'disabled ':'')+'onclick="mkGo(\''+c.id+'\''+(c.city?',selC_()':'')+')">'+(busy?'Jeda '+cdl+' hari':'Pasang '+rp(co))+'</button></div>'};
+window.selC_=()=>selC;
+P.mkt=function(){if(!G.branches.includes(selC))selC=G.branches[G.branches.length>1?1:0]||'';const k=mkE(),q=G.pkgs.filter(p=>p.st==0).length,tot=mkM();
+ let h='<div class="c"><b>📣 Pemasaran</b><div class="k">Pasang iklan untuk menaikkan jumlah pesanan. Biaya mengikuti pendapatan harianmu, jadi tetap seimbang saat bisnis membesar. Pesanan ekstra hanya menguntungkan bila armada dan staf sanggup mengantar tepat waktu.</div></div>';
+ if(q>30)h+='<div class="act wn" style="cursor:default"><span>⏳</span><span>Antrean pickup '+q+' paket. Tambah armada atau staf dulu sebelum pasang iklan besar.</span></div>';
+ if(k.a.length)h+='<div class="c"><b>Kampanye aktif</b>'+k.a.map(x=>'<div class="k">'+esc(x.n)+': +'+pc(x.b)+' sampai '+date(x.u)+'</div>').join('')+'<div class="k"><b>Total pengganda permintaan: x'+tot.toFixed(2)+'</b> (maks x1,8)</div></div>';
+ h+=ALL.map(camp).join('');
+ h+='<div class="c k">Total dibelanjakan untuk iklan: '+rp(k.sp)+' · '+k.n+' kampanye. Ini semua fiksi permainan, nama artis dan selebgram tidak merujuk orang sungguhan.</div>';
+ return h};
+try{const g=GRP.find(x=>x.k=='eks');if(g&&!g.m.some(x=>x[0]=='mkt'))g.m.push(['mkt','📣 Iklan'])}catch(e){}
+try{const ea=extraAct;extraAct=function(){let x='';try{if(G&&G.mk){const k=mkE();if(k.a.length){const t=Math.max.apply(null,k.a.map(y=>y.u));x='<div class="act ok" onclick="goMore(\'mkt\')"><span>📣</span><span>Iklan aktif: permintaan x'+mkM().toFixed(2)+' sampai '+date(t)+'</span></div>'}}}catch(e){}return x+ea.apply(this,arguments)}}catch(e){}
 })();
 </script>
 </body></html>
