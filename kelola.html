@@ -1,0 +1,61 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Kelola Kode</title>
+<style>
+:root{--bg:#EDF5FF;--cd:#fff;--tx:#243653;--mu:#6b7d99;--ac:#2563C7;--bd:#d6e6fa;--gr:#25B875;--rd:#d94a4a;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0b1220;--cd:#131c2e;--tx:#e6ecf8;--mu:#93a0ba;--bd:#243049;--ac:#45A9F5;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,sans-serif;padding:14px;max-width:520px;margin:auto}
+h1{font-size:20px;margin:6px 0 12px}.c{background:var(--cd);border:1px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;color:var(--mu);margin:8px 0 4px}
+input{width:100%;padding:11px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit}
+.ch{display:flex;flex-wrap:wrap;gap:6px}.ch button{flex:1 1 30%;padding:10px 6px;border-radius:12px;border:2px solid var(--bd);background:var(--bg);color:var(--tx);font:600 13px system-ui;cursor:pointer;min-height:48px}
+.ch button.on{border-color:var(--ac);background:var(--ac);color:#fff}
+.go{width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:var(--ac);color:#fff;font:700 15px system-ui;cursor:pointer}
+.cd{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--bd);border-radius:12px;margin-top:8px}
+.cd b{flex:1;font:800 18px ui-monospace,Menlo,monospace;letter-spacing:1px}
+.cd button{border:0;border-radius:10px;padding:9px 10px;background:var(--bd);color:var(--tx);font:600 12px system-ui;cursor:pointer}
+.er{color:var(--rd);margin-top:8px}.k{color:var(--mu);font-size:13px}
+</style></head><body>
+<h1>🎟️ Kelola Kode Klaim</h1>
+<div class="c">
+<label>Kunci admin (ADMIN_KEY)</label>
+<input id="key" type="password" autocomplete="off" placeholder="kata sandi admin">
+<label>Pilih paket</label>
+<div class="ch" id="pk"></div>
+<label>Jumlah kode</label>
+<input id="n" type="number" min="1" max="20" value="1" inputmode="numeric">
+<label>Khusus ID pemain (opsional)</label>
+<input id="uid" placeholder="JE-XXXXXX" autocapitalize="characters" maxlength="9">
+<button class="go" onclick="mk()">Buat kode</button>
+<div class="er" id="er"></div>
+</div>
+<div id="out"></div>
+<div class="k">Kunci tidak disimpan. Halaman ini hanya bisa dipakai kalau kamu tahu ADMIN_KEY.</div>
+<script>
+const PK=[
+ {t:'💎 50',s:'Rp5.000',gem:50},{t:'💎 120',s:'Rp10.000',gem:120},{t:'💎 300',s:'Rp25.000',gem:300},
+ {t:'💎 650',s:'Rp50.000',gem:650},{t:'💎 1.400',s:'Rp100.000',gem:1400},{t:'👑 Eksklusif',s:'Juragan',sup:true,gem:0}
+];
+let sel=1;
+const $=id=>document.getElementById(id);
+function draw(){$('pk').innerHTML=PK.map((p,i)=>'<button class="'+(i==sel?'on':'')+'" onclick="sel='+i+';draw()">'+p.t+'<br><small>'+p.s+'</small></button>').join('')}
+draw();
+const msg=(c,p)=>'Terima kasih sudah mendukung JE Game Studio! 🙏\nKode klaim kamu: '+c+'\n\nCara pakai: '+(p.sup?'buka menu Juragan Eksklusif di game, masukkan kode di kolom "Klaim kode", lalu tekan Klaim.':'buka Toko > tab Diamond > kolom "Klaim kode diamond", masukkan kode, lalu tekan Klaim.');
+async function mk(){
+ $('er').textContent='';$('out').innerHTML='';
+ const p=PK[sel],key=$('key').value.trim();
+ if(!key){$('er').textContent='Isi kunci admin dulu.';return}
+ const body={key,act:'code',gem:p.gem,n:Math.max(1,Math.min(20,+$('n').value||1))};
+ if(p.sup)body.sup=true;
+ const u=$('uid').value.trim().toUpperCase();if(u)body.uid=u;
+ try{
+  const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){$('er').textContent=({forbidden:'Kunci admin salah.','not configured':'ADMIN_KEY belum dipasang di Cloudflare.','bad uid':'Format ID salah (contoh JE-ABC234).'})[j.err]||('Gagal: '+(j.err||r.status));return}
+  $('out').innerHTML='<div class="c"><b>'+j.codes.length+' kode untuk '+p.t+'</b>'+j.codes.map((c,i)=>'<div class="cd"><b>'+c+'</b><button onclick="cp('+i+',0)">Salin kode</button><button onclick="cp('+i+',1)">Salin pesan</button></div>').join('')+'</div>';
+  window._c=j.codes;window._p=p;
+ }catch(e){$('er').textContent='Tidak bisa terhubung ke server.'}
+}
+function cp(i,m){const t=m?msg(window._c[i],window._p):window._c[i];(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert('Tersalin!'),()=>prompt('Salin teks ini:',t))}
+</script></body></html>
