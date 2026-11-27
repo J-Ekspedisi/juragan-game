@@ -2561,13 +2561,13 @@ const sh0=showEv;showEv=function(){sh0();const e=EV[G.pev];if(e&&BAD.includes(e.
 window.premShield=()=>{const e=EV[G.pev];if(!e||pm().shield<1)return;pm().shield--;G.pev=null;log('Tameng musibah menahan: '+e.n);closeM();toast('🧯 '+e.n+' dibatalkan','gold');save();render()};
 /* beli lewat server (potong diamond) */
 window.premBuy=async k=>{if(!G)return;const gm=window.tkMe?tkMe.gem():0;if(gm<PR[k]){toast('Diamond tidak cukup. Beli dulu di Toko.','');return}
- try{const r=await fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:localStorage.getItem('etid_uid'),act:'spend',k})});if(!r.ok)throw 0;
+ try{const r=await fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:localStorage.getItem('etid_uid'),act:'spend',k})});if(!r.ok){const j=await r.json().catch(()=>({}));throw{s:r.status,e:j.err||''}}
   if(k=='ins')pm().ins=Math.max(pm().ins,G.t)+720;
   if(k=='shield')pm().shield+=3;
   if(k=='speed'){G.fx.whd=null;G.staff.forEach(s=>{s.leave=0;s.sick=0});G.veh.forEach(v=>{v.c=Math.max(v.c,85)})}
   if(k=='grace'){if(G.over){G.over=false;G.neg=7}else G.neg=Math.max(0,G.neg-7)}
   log('Premium: '+k);save();window.tkSync&&tkSync(true);closeM();toast('✅ Berhasil dibeli','gold');render()}
- catch(e){toast('Belum bisa dibeli: server belum mendukung aksi ini','')}};
+ catch(e){toast(e&&e.s?(e.e=='bad act'?'Server belum diperbarui (bad act): deploy profile.js terbaru':e.e=='gem'?'Diamond tidak cukup':'Gagal ('+e.s+(e.e?' '+e.e:'')+')'):'Tidak bisa terhubung ke server','')}};
 /* penyelamat bangkrut */
 window.rescue=()=>{const l=Math.max(0,14-G.neg);modal('<h2>🚨 '+(G.over?'Bangkrut':'Sisa '+l+' hari')+'</h2><p>'+(G.over?'Kas negatif 14 hari.':'Kas negatif '+G.neg+' hari. Pada hari ke-14 perusahaan bangkrut.')+' Pilih jalan keluar:</p><button class="b" onclick="tkCash(0)">💎 Suntik modal Rp500 juta (💎100)</button><button class="b" onclick="premBuy(\'grace\')">⏳ Masa tenggang +7 hari (💎'+PR.grace+')</button>'+(G.over?'<button class="b s" onclick="restruct()">Restrukturisasi gratis (separuh kendaraan dijual)</button>':'<button class="b s" onclick="closeM()">Tutup</button>'))};
 const tc0=window.tkCashGo;if(tc0)window.tkCashGo=async function(i){await tc0(i);if(G&&G.over&&G.cash>=0){G.over=false;G.neg=0;save();render()}};
