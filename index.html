@@ -1552,4 +1552,30 @@ try{const r=render;render=function(){if(G&&G.logo=='shopfr'&&S.eq<0){G.logo=LKEY
 setAv();lg();
 })();
 </script>
+<script>
+/* ===== V4.2: Peringkat mingguan (Cloudflare KV) ===== */
+(()=>{
+const RK='etid_rk_';
+const wk=()=>{const d=new Date(Date.now()+7*36e5),t=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));const y=t.getUTCFullYear();return y+'-W'+String(Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7)).padStart(2,'0')};
+const uid=()=>{const u=ld('etid_uid');return /^JE-[A-Z2-9]{6}$/.test(u||'')?u:''};
+const bs=()=>{const k=RK+slot;let b=null;try{b=JSON.parse(ld(k)||'null')}catch(e){}const w=wk();if(!b||b.w!==w||typeof b.p0!='number'){b={w,p0:Math.round(wealth()),k0:G.delivered||0};sv(k,JSON.stringify(b))}return b};
+const snap=()=>{const b=bs();let n=String(G.owner||G.name||'').trim();if(n.length<3)n='Juragan '+uid().slice(-4);return{uid:uid(),name:n,co:G.name||'',p:Math.round(wealth()-b.p0),k:(G.delivered||0)-b.k0,l:G.lvl,r:Math.round(G.rep)}};
+let D=null,T='profit',busy=false,err='',last=0;
+const send=async force=>{if(!G||!uid()||(!force&&Date.now()-last<25000))return;last=Date.now();try{await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(snap())})}catch(e){}};
+const load=async()=>{if(busy)return;busy=true;err='';render();try{await send(true);const r=await fetch('/api/leaderboard?uid='+uid(),{cache:'no-store'});if(!r.ok)throw new Error('http '+r.status);D=await r.json()}catch(e){err='Tidak bisa memuat peringkat ('+(e.message||e)+')'}busy=false;render()};
+const rs=()=>{const n=Date.now(),d=new Date(n+7*36e5),dy=d.getUTCDay()||7,ms=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+8-dy)-(n+7*36e5),h=Math.floor(ms/36e5);return Math.floor(h/24)+' hari '+h%24+' jam'};
+P.rank=function(){
+ const tb=[['profit','💰 Laba'],['pkgs','📦 Paket'],['lvl','⭐ Level']];
+ let h='<button class="b s" onclick="go(\'more\')">← Lainnya</button><div class="tabs">'+tb.map(t=>'<button class="b'+(T==t[0]?'':' s')+'" onclick="rkTab(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>';
+ h+='<div class="c"><b>🏆 Peringkat Mingguan</b><div class="k">Reset dalam '+rs()+(D?' · '+D.total+' pemain':'')+'</div>';
+ if(err)h+='<div class="k">'+esc(err)+'</div></div>';
+ else if(!D)h+='<div class="k">Memuat...</div></div>';
+ else{const c=D.cats[T];h+='<div>'+(c.me?'Posisimu: <b>#'+c.me.pos+'</b>':'Kamu belum masuk peringkat')+'</div></div>';
+  h+=c.top.length?tbl(['#','Pemain',T=='profit'?'Laba':T=='pkgs'?'Paket':'Level'],c.top.map(r=>[r.pos,(r.me?'👉 ':'')+esc(r.n)+(r.c?'<div class="k">'+esc(r.c)+'</div>':''),T=='profit'?rp(r.p):T=='pkgs'?r.k:'Lv '+r.l+' · '+r.r])):'<div class="c k">Belum ada pemain minggu ini. Jadilah yang pertama!</div>'}
+ return h+'<button class="b" onclick="rkLoad()">🔄 Perbarui</button><div class="c k">Laba dihitung dari kenaikan kekayaan sejak game pertama dibuka minggu ini. Skor dikirim otomatis saat online, dan skor yang tidak wajar ditolak server.</div>'};
+window.rkOpen=()=>{go('rank');load()};window.rkLoad=()=>load();window.rkTab=t=>{T=t;render()};
+try{const g=P.grid;P.grid=function(){return '<div class="c"><button class="b" onclick="rkOpen()">🏆 Peringkat Mingguan</button></div>'+g.apply(this,arguments)}}catch(e){}
+try{const d=dayEnd;dayEnd=function(){d.apply(this,arguments);try{if(Math.floor(G.t/24)%2==0)send(false)}catch(e){}}}catch(e){}
+})();
+</script>
 </body></html>
