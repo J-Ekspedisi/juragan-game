@@ -1736,4 +1736,75 @@ try{const m=P.misi;P.misi=function(){return '<button class="b s" onclick="go(\'m
 try{const d=dayEnd;dayEnd=function(){d.apply(this,arguments);try{if(Math.floor(G.t/24)%2==0)send(false)}catch(e){}}}catch(e){}
 })();
 </script>
+<script>
+/* ===== V4.3: Cloud Save (Cloudflare KV) ===== */
+(()=>{
+const AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',KK='etid_ck',KB='etid_csv',KT='etid_cst',UK='etid_uid';
+const UR=/^JE-[ABCDEFGHJKLMNPQRSTUVWXYZ2-9]{6}$/,KR=/^[A-Z2-9]{12}$/;
+const ERR={forbidden:'ID atau kode pemulihan salah',limit:'Terlalu banyak percobaan. Coba lagi 10 menit lagi.','bad key':'Format kode pemulihan salah','bad uid':'Format ID salah','too big':'Data save terlalu besar','too fast':'Terlalu cepat, coba lagi sebentar',empty:'Slot cloud kosong'};
+const gk=()=>{const k=ld(KK)||'';return KR.test(k)?k:''};
+const fk=k=>k.slice(0,4)+'-'+k.slice(4,8)+'-'+k.slice(8);
+const nk=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const uid=()=>{const u=ld(UK);return UR.test(u||'')?u:''};
+const bases=()=>{try{return JSON.parse(ld(KB)||'{}')||{}}catch(e){return {}}};
+const setBase=(i,v)=>{const b=bases();b[i]=v;sv(KB,JSON.stringify(b))};
+const fmt=t=>new Date(t).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const gen=()=>{const b=new Uint8Array(12);crypto.getRandomValues(b);let s='';for(const x of b)s+=AL[x&31];return s};
+let dirty=false,last=0,busy=false,conf={},CUR=null;
+const call=async o=>{const r=await fetch('/api/cloud',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.err||('http '+r.status)),{j,s:r.status});return j};
+const pack=async s=>{if(window.CompressionStream){try{const st=new Blob([s]).stream().pipeThrough(new CompressionStream('gzip'));const u=new Uint8Array(await new Response(st).arrayBuffer());let b='';for(let i=0;i<u.length;i+=32768)b+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return 'gz:'+btoa(b)}catch(e){}}return 'raw:'+s};
+const unpack=async d=>{if(d.indexOf('raw:')==0)return d.slice(4);if(d.indexOf('gz:')==0){if(!window.DecompressionStream)throw new Error('Browser ini belum bisa membuka data cloud');const bin=atob(d.slice(3)),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}throw new Error('Format data tidak dikenal')};
+const upSlot=async(i,force)=>{const raw=ld('etid_s'+i);if(!raw)return 0;let g;try{g=JSON.parse(raw)}catch(e){return 0}if(!validate(g))return 0;
+ const env='{"g":'+raw+',"r":'+JSON.stringify(ld('etid_rk_'+i)||'')+'}';
+ const m={n:String(g.name||''),o:String(g.owner||''),c:Math.round(g.cash)||0,l:g.lvl|0};
+ try{const j=await call({act:'save',uid:uid(),key:gk(),slot:i,data:await pack(env),t:g.savedAt||Date.now(),base:bases()[i]||0,force:!!force,m});setBase(i,j.srv);delete conf[i];sv(KT,String(Date.now()));return 1}
+ catch(e){if(e.s===409){conf[i]=1;return -1}throw e}};
+const upAll=async force=>{let n=0,c=0;for(let i=1;i<=3;i++){const r=await upSlot(i,force);if(r===1)n++;else if(r===-1)c++}return{n,c}};
+/* simpan otomatis: hemat kuota, jadi jarak antar upload cukup jauh */
+try{const s0=save;save=function(){const r=s0.apply(this,arguments);if(gk())dirty=true;return r}}catch(e){}
+const auto=async gap=>{if(busy||!dirty||!gk()||!uid()||!navigator.onLine||typeof G=='undefined'||!G||!slot||conf[slot])return;if(Date.now()-last<gap)return;busy=true;last=Date.now();
+ try{const r=await upSlot(slot,false);if(r===1)dirty=false;else if(r===-1)toast('☁️ Cloud punya data lebih baru. Buka Pengaturan > Cloud Save','')}catch(e){}busy=false};
+setInterval(()=>auto(6e5),30000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)auto(18e4)});
+const card=()=>{const k=gk(),t=+ld(KT)||0;
+ if(!k)return '<div class="c pcloud"><b>☁️ Cloud Save</b><div class="k">Simpan progres ke server supaya aman saat ganti HP atau data browser terhapus. Gratis.</div><button class="b" onclick="cloudOn()">Aktifkan Cloud Save</button><button class="b s" onclick="cloudRestoreDlg()">Pulihkan dari cloud</button></div>';
+ const cf=Object.keys(conf).length;
+ return '<div class="c pcloud"><b>☁️ Cloud Save</b> <span class="gr">Aktif</span><div class="k">'+(t?'Terakhir tersimpan: '+fmt(t)+'. ':'Belum ada upload. ')+'Disimpan otomatis tiap beberapa menit saat kamu bermain.</div>'+(cf?'<div class="k rd">Cloud punya data lebih baru dari perangkat lain. Pilih: timpa cloud dengan data di perangkat ini, atau pulihkan data cloud.</div><button class="b d" onclick="cloudOverwrite()">Timpa cloud dengan data ini</button>':'')+'<button class="b" onclick="cloudNow()">Simpan sekarang</button><button class="b s" onclick="cloudShowKey()">Lihat kode pemulihan</button><button class="b s" onclick="cloudRestoreDlg()">Pulihkan dari cloud</button></div>'};
+window.cloudRefresh=()=>{try{G?render():menu()}catch(e){}};
+window.cloudShowKey=()=>{const k=gk(),u=uid();if(!k)return;
+ modal('<h2>☁️ Kode pemulihan</h2><p class="k">Simpan ID dan kode ini. Tanpa keduanya, data cloud tidak bisa dipulihkan di HP lain. Jangan dibagikan ke orang lain.</p><div class="c" style="text-align:center"><div class="k">ID pemain</div><b style="font:800 22px ui-monospace,Menlo,Consolas,monospace;letter-spacing:2px;user-select:all">'+esc(u)+'</b><div class="k" style="margin-top:8px">Kode pemulihan</div><b style="font:800 22px ui-monospace,Menlo,Consolas,monospace;letter-spacing:2px;user-select:all">'+fk(k)+'</b></div><button class="b" onclick="cloudCopy()">📋 Salin ID + kode</button><button class="b s" onclick="closeM();cloudRefresh()">Tutup</button>')};
+window.cloudCopy=()=>{const t='ID pemain: '+uid()+'\nKode pemulihan: '+fk(gk()),f=()=>{try{prompt('Salin teks ini:',t)}catch(e){}};try{navigator.clipboard.writeText(t).then(()=>toast('Tersalin','') ,f)}catch(e){f()}};
+window.cloudOn=async()=>{if(!uid()){toast('ID pemain belum siap, coba lagi','');return}if(busy)return;busy=true;
+ const k=gen();sv(KK,k);sv(KB,'{}');
+ try{try{if(G)save()}catch(e){}toast('☁️ Menyimpan ke cloud…','');const r=await upAll(true);dirty=false;sv(KT,String(Date.now()));busy=false;cloudShowKey()}
+ catch(e){busy=false;try{localStorage.removeItem(KK)}catch(x){}alert(e.message=='forbidden'?'ID ini sudah punya kode pemulihan di cloud. Pakai "Pulihkan dari cloud" dengan kode lamamu.':(ERR[e.message]||'Tidak bisa terhubung ke server. Coba lagi.'));cloudRefresh()}};
+window.cloudNow=async()=>{if(!gk()||busy)return;busy=true;try{if(G)save()}catch(e){}toast('☁️ Menyimpan…','');
+ try{const r=await upAll(false);if(r.c)toast('⚠️ Ada data cloud yang lebih baru','');else if(r.n){dirty=false;toast('☁️ Tersimpan ke cloud','gold')}else toast('Belum ada save untuk disimpan','')}
+ catch(e){toast(ERR[e.message]||'Tidak bisa terhubung ke server','')}busy=false;cloudRefresh()};
+window.cloudOverwrite=async()=>{if(!gk()||busy)return;if(!confirm('Data cloud akan ditimpa dengan data di perangkat ini. Lanjut?'))return;busy=true;
+ try{await upAll(true);dirty=false;toast('☁️ Cloud diperbarui','gold')}catch(e){toast(ERR[e.message]||'Tidak bisa terhubung ke server','')}busy=false;cloudRefresh()};
+window.cloudRestoreDlg=()=>{const k=gk();
+ modal('<h2>♻️ Pulihkan dari cloud</h2><p class="k">Masukkan ID pemain dan kode pemulihan dari perangkat lama.</p><input id="cru" placeholder="JE-XXXXXX" autocomplete="off" autocapitalize="characters" maxlength="12" value="'+(k?esc(uid()):'')+'"><input id="crk" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" maxlength="14" value="'+(k?fk(k):'')+'"><button class="b" onclick="cloudList()">Cari data</button><div id="crl"></div><button class="b s" onclick="closeM()">Tutup</button>')};
+window.cloudList=async()=>{const out=$('#crl'),r=nk($('#cru').value),u='JE-'+r.slice(2),k=nk($('#crk').value);
+ if(r.slice(0,2)!=='JE'||!UR.test(u)){out.innerHTML='<div class="k rd">Format ID salah</div>';return}
+ if(!KR.test(k)){out.innerHTML='<div class="k rd">Format kode pemulihan salah</div>';return}
+ out.innerHTML='<div class="k">Mencari…</div>';
+ try{const j=await call({act:'list',uid:u,key:k});CUR={u,k};
+  out.innerHTML=j.slots.length?j.slots.map(s=>{const m=s.m||{};return '<div class="c"><b>Cloud slot '+s.slot+'</b><div class="k">'+esc(m.n||'-')+' · '+esc(m.o||'')+' · Rp'+Number(m.c||0).toLocaleString('id-ID')+' · Lv '+(m.l||0)+'<br>Disimpan '+fmt(s.srv||s.t||Date.now())+'</div><button class="b" onclick="cloudPick('+s.slot+')">Pakai ke slot '+s.slot+'</button></div>'}).join(''):'<div class="k">Belum ada data yang tersimpan untuk ID ini.</div>'}
+ catch(e){out.innerHTML='<div class="k rd">'+esc(ERR[e.message]||'Tidak bisa terhubung ke server')+'</div>'}};
+window.cloudPick=async i=>{if(!CUR||busy)return;const ch=uid()!==CUR.u;
+ if(!confirm((ld('etid_s'+i)?'Slot '+i+' di perangkat ini akan ditimpa dengan data cloud.':'Data cloud akan disalin ke slot '+i+'.')+(ch?'\nID pemain di perangkat ini juga akan diganti menjadi '+CUR.u+'.':'')+'\nLanjut?'))return;
+ busy=true;
+ try{const j=await call({act:'load',uid:CUR.u,key:CUR.k,slot:i});const env=JSON.parse(await unpack(j.data));const g=env&&env.g?env.g:env;if(!validate(g))throw new Error('Data cloud rusak');
+  sv('etid_s'+i,JSON.stringify(migrate(g)));if(env&&env.r)sv('etid_rk_'+i,env.r);
+  if(ch){try{localStorage.removeItem('etid_sup')}catch(e){}sv(UK,CUR.u);sv(KB,'{}')}
+  sv(KK,CUR.k);setBase(i,j.srv);sv(KT,String(Date.now()));
+  toast('☁️ Data dipulihkan','gold');setTimeout(()=>location.reload(),700)}
+ catch(e){busy=false;toast(ERR[e.message]||e.message||'Gagal memulihkan','')}};
+try{const s=P.set;P.set=function(){return s.apply(this,arguments)+card()}}catch(e){}
+const mc=()=>{const b=document.querySelector('#menu .mb');if(b&&!b.querySelector('.pcloud'))b.insertAdjacentHTML('beforeend',card())};
+try{const m=menu;menu=function(){m.apply(this,arguments);mc()}}catch(e){}
+if(document.querySelector('#menu.on'))mc();
+})();
+</script>
 </body></html>
