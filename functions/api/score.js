@@ -34,14 +34,17 @@ export async function onRequestPost({ request, env }) {
   if (!old && Object.keys(board).length >= 3000) return new Response('full', { status: 503 });
 
   // bingkai & avatar diambil dari profil di server (bukan dari klien), jadi tidak bisa dipalsukan
-  let f = -1, av = '', v = 0;
+  let f = -1, av = '', v = 0, sp = 0;
   try {
     const pr = JSON.parse((await env.RANK.get('u:' + uid)) || 'null');
     if (pr) {
       if (Number.isInteger(pr.eq) && Array.isArray(pr.own) && pr.own.includes(pr.eq)) f = pr.eq;
       if (pr.v > 0) { v = pr.v | 0; av = await pubHash(uid, env); }
+      if (pr.sup) sp = 1;
     }
   } catch {}
+  // status Juragan Eksklusif juga bisa tercatat lewat grant.js (binding SUPPORTERS)
+  if (!sp && env.SUPPORTERS) { try { if (await env.SUPPORTERS.get('u:' + uid)) sp = 1; } catch {} }
 
   const hrs = old ? Math.max(1, (now - old.t) / 36e5) : 1;
   const p = num(b.p, -1e12, 1e12);
@@ -56,7 +59,7 @@ export async function onRequestPost({ request, env }) {
     k: old ? Math.min(Math.max(k, old.k), old.k + 2000 * hrs) : Math.min(k, 5000),
     l: old ? Math.min(Math.max(l, old.l), old.l + 5) : l,
     r,
-    f, a: av, v,
+    f, a: av, v, s: sp,
     t: now
   };
   await env.RANK.put(key, JSON.stringify(board), { expirationTtl: 14 * 86400 });

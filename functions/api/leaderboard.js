@@ -22,7 +22,7 @@ export async function onRequestGet({ request, env }) {
   const out = { week, total: all.length, cats: {} };
   for (const c in SORT) {
     const sorted = [...all].sort(SORT[c]);
-    const row = (e, i) => ({ pos: i + 1, n: e.n, c: e.c, p: e.p, k: e.k, l: e.l, r: e.r, f: Number.isInteger(e.f) ? e.f : -1, a: e.a || '', v: e.v || 0, me: e.id === uid });
+    const row = (e, i) => ({ pos: i + 1, n: e.n, c: e.c, p: e.p, k: e.k, l: e.l, r: e.r, f: Number.isInteger(e.f) ? e.f : -1, a: e.a || '', v: e.v || 0, s: e.s ? 1 : 0, me: e.id === uid });
     const mi = uid ? sorted.findIndex(e => e.id === uid) : -1;
     out.cats[c] = { top: sorted.slice(0, 20).map(row), me: mi >= 0 ? row(sorted[mi], mi) : null };
   }
