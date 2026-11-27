@@ -9,6 +9,11 @@ function weekId(t) {
   return y + '-W' + String(w).padStart(2, '0');
 }
 
+async function pubHash(uid, env) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('je-avatar:' + uid + (env.SALT || '')));
+  return [...new Uint8Array(b)].slice(0, 8).map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
 const clean = (s, n) => String(s || '').replace(/[^\p{L}\p{N} ._-]/gu, '').trim().slice(0, n);
 const num = (v, lo, hi) => { v = Number(v); return Number.isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : 0; };
 
@@ -28,6 +33,16 @@ export async function onRequestPost({ request, env }) {
   if (old && now - old.t < 20000) return new Response('too fast', { status: 429 });
   if (!old && Object.keys(board).length >= 3000) return new Response('full', { status: 503 });
 
+  // bingkai & avatar diambil dari profil di server (bukan dari klien), jadi tidak bisa dipalsukan
+  let f = -1, av = '', v = 0;
+  try {
+    const pr = JSON.parse((await env.RANK.get('u:' + uid)) || 'null');
+    if (pr) {
+      if (Number.isInteger(pr.eq) && Array.isArray(pr.own) && pr.own.includes(pr.eq)) f = pr.eq;
+      if (pr.v > 0) { v = pr.v | 0; av = await pubHash(uid, env); }
+    }
+  } catch {}
+
   const hrs = old ? Math.max(1, (now - old.t) / 36e5) : 1;
   const p = num(b.p, -1e12, 1e12);
   const k = num(b.k, 0, 1e6);
@@ -41,6 +56,7 @@ export async function onRequestPost({ request, env }) {
     k: old ? Math.min(Math.max(k, old.k), old.k + 2000 * hrs) : Math.min(k, 5000),
     l: old ? Math.min(Math.max(l, old.l), old.l + 5) : l,
     r,
+    f, a: av, v,
     t: now
   };
   await env.RANK.put(key, JSON.stringify(board), { expirationTtl: 14 * 86400 });
