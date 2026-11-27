@@ -382,7 +382,7 @@ brBase(){return tbl(['Kota','Permintaan','Biaya','Aksi'],Object.keys(CT).map(n=>
 con(){const c=G.contract;return (c?'<div class="c"><b>Kontrak aktif: '+c.n+'</b><br>Progres '+c.done+' / '+c.vol+' paket - tarif bonus +20% - berakhir '+date(c.end)+' - penalti '+rp(c.pen)+'</div>':'<div class="c k">Belum ada kontrak aktif.</div>')+'<div class="g">'+G.offers.map((o,i)=>'<div class="c"><b>'+o.n+'</b><div class="k">'+o.vol+' paket / '+o.dur+' hari<br>Tarif '+rp(o.rate)+'/paket<br>Penalti '+rp(o.pen)+'<br>Syarat: kapasitas gudang ≥ '+o.cap*10+'</div><button class="b" '+(c||wcap()<o.cap*10?'disabled':'')+' onclick="takeC('+i+')">Terima</button></div>').join('')+'</div>'},
 ach(){return '<div class="c"><b>Misi harian</b>: kirim 20 paket ('+G.mDay+'/20) - hadiah Rp1.000.000'+(G.cDay?' ✅':'')+'<br><b>Misi mingguan</b>: kirim 150 paket ('+G.mWk+'/150) - hadiah Rp5.000.000'+(G.cWk?' ✅':'')+'</div>'+ACH.map(a=>'<div class="c">'+(G.ach[a[0]]?'🏆':'🔒')+' '+a[1]+'</div>').join('')+''},
 set(){return temaCard()+sndCard()+'<div class="c"><button class="b" onclick="save();alert(\'Tersimpan\')">Simpan sekarang</button><button class="b s" onclick="expo('+slot+')">Export Save</button><button class="b s" onclick="runTests()">Jalankan Uji Mandiri</button><button class="b s" onclick="runTests5()">Uji V1.5</button><button class="b s" onclick="runTests6()">Uji V1.6</button><button class="b s" onclick="runTests7()">Uji V1.7</button><button class="b s" onclick="runTests8()">Uji V1.8</button><button class="b s" onclick="runTests9()">Uji V1.9</button><button class="b s" onclick="runTests20()">Uji V2.0</button><button class="b s" onclick="runTests21()">Uji V2.1</button><button class="b s" onclick="runTests22()">Uji V2.2</button><button class="b s" onclick="save();menu()">Menu Utama</button></div><div class="c k">Versi 2.2 - Cloud save dan multiplayer belum tersedia.</div>'}};
-const tabsOf=(l,cur)=>'<div class="tabs">'+l.map(t=>'<button class="b'+(cur==t[0]?'':' s')+'" onclick="sub=\''+t[0]+'\';render()">'+t[1]+'</button>').join('')+'</div>';
+const tabsOf=(l,cur)=>'<div class="tabs">'+l.map(t=>{const m=String(t[1]).match(/^([^\p{L}\p{N}\s]+)\s+(.+)$/u);return '<button class="b'+(cur==t[0]?'':' s')+(m?' tb':'')+'" onclick="sub=\''+t[0]+'\';render()">'+(m?'<i class="ti">'+m[1]+'</i><span class="tl">'+m[2]+'</span>':t[1])+'</button>'}).join('')+'</div>';
 const SUBS=['pkg','veh','stf','wh'];
 Object.assign(P,{
 ops(a){const s=SUBS.includes(sub)?sub:'pkg';return tabsOf([['pkg','📦 Paket'],['veh','🚚 Armada'],['stf','👷 Kurir'],['wh','🏭 Gudang'],['rt','🧭 Rute']],s)+(s=='pkg'?warns():'')+P[s](a)},
@@ -641,7 +641,7 @@ function pager(k,list,fn){const lim=PGN[k];return list.slice(0,lim).map(fn).join
 const vehCard=v=>{const p=VT[v.type].p,st=v.c<20?['no','Rusak']:v.c<50?['wn','Perlu servis']:['ok','Siap'];return `<div class='c vc'><div class='ic${v.c<20?" bk":""}'>${VI[v.type]}${v.c<20?'<i class="wr">🔧</i>':''}</div><div class='fl'><b>${VT[v.type].n} ${v.id}</b> <span class='bd ${st[0]}'>${st[1]}</span><div class='k'>Kondisi ${Math.round(v.c)}% - ${v.km} km - Upgrade ${v.up}/3</div>${bar(v.c,v.c<20?'var(--rd)':v.c<50?'var(--or)':'var(--gr)')}</div><div><button class='b s' data-i='${v.id}' onclick='svc(this.dataset.i,0)'>Servis ${rp(p*.004)}</button><button class='b s' data-i='${v.id}' onclick='svc(this.dataset.i,1)'>Perbaiki ${rp(p*.01)}</button>${v.up<3?`<button class='b s' data-i='${v.id}' onclick='svc(this.dataset.i,2)'>Upgrade ${rp(p*.15*(v.up+1))}</button>`:''}<button class='b d' data-i='${v.id}' onclick='svc(this.dataset.i,3)'>Jual</button></div></div>`};
 const stfCard=s=>{const st=s.leave>0?['in','Cuti '+s.leave+'h']:s.on?['ok','Bekerja']:['wn','Istirahat'];return `<div class='c vc'><div class='ic ${s.leave>0?'':s.on?'wk':'rs'}'>${s.leave>0?'🏖️':'👷'}${s.leave>0?'':s.on?'<i class="pk">📦</i>':'<i class="zz">💤</i>'}</div><div class='fl'><b>${esc(s.name)}</b> <span class='bd ${st[0]}'>${st[1]}</span>${tbadge(s)}<div class='k'>${RL[s.role].n} - ${s.id} - ${rp(s.sal)} - Prod ${Math.round(s.prod)}</div>${bar(s.en,s.en<50?'var(--or)':'var(--gr)')}<div class='k'>Energi ${Math.round(s.en)}%</div></div><div><button class='b s' data-i='${s.id}' onclick='stf(this.dataset.i,0)'>Latih</button><button class='b s' data-i='${s.id}' onclick='stf(this.dataset.i,1)'>Promosi</button><button class='b s' data-i='${s.id}' onclick='stf(this.dataset.i,2)'>Cuti</button><button class='b d' data-i='${s.id}' onclick='stf(this.dataset.i,3)'>Pecat</button></div></div>`};
 P.veh=function(){return bulkCard()+vehShop()+pager('veh',G.veh.slice().sort((a,b)=>a.c-b.c),vehCard)+`<p class='k'>Kendaraan dipasangkan otomatis dengan kurir (terburuk di atas). Pesawat dan kapal kargo melayani paket internasional (butuh negara terbuka di Peta); truk kontainer dikemudikan sopir truk.</p>`};
-P.stf=function(){return `<div class='g'>${Object.keys(RL).map(r=>`<div class='c'><b>${RL[r].n}</b><div class='k'>${RL[r].mit?'Tunjangan':'Gaji'} ~${rp(RL[r].s)}/bln${RL[r].mit?' + Rp3.000/paket. Motor dan BBM ditanggung kurir, tanpa beli armada.':''}</div><button class='b' data-r='${r}' onclick='hire(this.dataset.r)'>Rekrut ${rp(RL[r].s/2)}</button></div>`).join('')}</div>`+pager('stf',G.staff,stfCard)+`<p class='k'>Jam kerja 07-19. Energi di bawah 50% menurunkan produktivitas.</p>`};
+P.stf=function(){return `<div class='g'>${Object.keys(RL).map(r=>`<div class='c'><div class='hd'><b>${RL[r].n}</b></div><div class='k'>${RL[r].mit?'Tunjangan':'Gaji'} ~${rp(RL[r].s)}/bln${RL[r].mit?' + Rp3.000/paket. Motor dan BBM ditanggung kurir, tanpa beli armada.':''}</div><button class='b' data-r='${r}' onclick='hire(this.dataset.r)'>Rekrut ${rp(RL[r].s/2)}</button></div>`).join('')}</div>`+pager('stf',G.staff,stfCard)+`<p class='k'>Jam kerja 07-19. Energi di bawah 50% menurunkan produktivitas.</p>`};
 
 /* Profit kotor per cabang */
 function branchCard(){ens();const rows=Object.keys(G.cb).map(c=>({c,...G.cb[c],p:G.cb[c].r-G.cb[c].c})).sort((a,b)=>b.p-a.p);return `<div class='c'><b>📍 Profit Kotor per Cabang</b>${rows.length?tbl(['Kota','Paket','Pendapatan','Biaya tetap','Profit','Status'],rows.map(x=>[x.c,x.n,rp(x.r),rp(x.c),'<span class="'+(x.p<0?'rd':'gr')+'">'+rp(x.p)+'</span>',x.p<0?'<span class="bd no">Rugi</span>':'<span class="bd ok">Untung</span>'])):'<div class="k">Belum ada data.</div>'}<div class='k'>Pendapatan menurut kota asal paket. Biaya tetap = sewa gudang + administrasi/lisensi. Gaji, BBM, hub, dan pajak belum dialokasikan per cabang. Dihitung sejak V1.6.</div></div>`}
@@ -1395,7 +1395,7 @@ P.rt=function(){return "<div class='c'><div class='k'>💡 Rute dengan muatan mi
 P.wh=function(){return "<div class='c'><div class='k'>💡 Gudang di kota yang menjadi asal rute aktif hemat 5% biaya sewa dan penanganan harian. Buat rute dari kota ini di tab Rute.</div></div>"+_whP.apply(this,arguments)};
 function vehShop(){const f=fuelNow(),fm=f?f.m:1,cost=t=>VT[t].fuel*(VT[t].ev?1:fm);
 const pr={motorev:'motor',vanev:'van',pickupev:'pickup',trukev:'truk',trukbev:'trukb'};
-const card=t=>{const v=VT[t],ev=!!v.ev,sv=ev?Math.round((1-cost(t)/cost(pr[t]))*100):0;return `<div class='c'><div style='font-size:34px'>${VI[t]}</div><b>${v.n}</b>${ev?` <span class='bd ok'>Hemat ${sv}%</span>`:''}<div class='k'>Kapasitas ${v.cap} - ${ev?'Listrik':'BBM'} ${rp(cost(t))}/jam${!ev&&f?' (BBM naik)':''}</div><button class='b' data-t='${t}' ${G.cash<v.p?'disabled':''} onclick='buyV(this.dataset.t)'>Beli ${rp(v.p)}</button></div>`};
+const card=t=>{const v=VT[t],ev=!!v.ev,sv=ev?Math.round((1-cost(t)/cost(pr[t]))*100):0;return `<div class='c'><div style='font-size:34px'>${VI[t]}</div><div class='hd'><b>${v.n}</b>${ev?`<span class='bd ok'>Hemat ${sv}%</span>`:''}</div><div class='k'>Kapasitas ${v.cap} - ${ev?'Listrik':'BBM'} ${rp(cost(t))}/jam${!ev&&f?' (BBM naik)':''}</div><button class='b' data-t='${t}' ${G.cash<v.p?'disabled':''} onclick='buyV(this.dataset.t)'>Beli ${rp(v.p)}</button></div>`};
 const grp=(h,l)=>l.length?`<div class='k' style='margin:10px 0 4px'><b>${h}</b></div><div class='g'>${l.map(card).join('')}</div>`:'';
 const ks=Object.keys(VT),ice=ks.filter(t=>!VT[t].ev&&!['kontainer','pesawat','kapal'].includes(t)),ev=ks.filter(t=>VT[t].ev),sp=ks.filter(t=>['kontainer','pesawat','kapal'].includes(t));
 const ne=G.veh.filter(v=>VT[v.type].ev).length;
@@ -1494,7 +1494,7 @@ window.supPoll=()=>{clearInterval(pt);let n=0;pt=setInterval(()=>{if(!document.g
 window.supChk=()=>{sync(true)};
 window.supOpen=()=>{const o=st();
 if(!o){modal('<h2>👑 Juragan Eksklusif</h2><div style="text-align:center"><svg viewBox="0 0 100 100" width="130" height="130">'+mk()+'</svg></div><p>Dukung pengembangan game ini dan dapatkan:</p><div class="c">🖼️ <b>Avatar kustom</b> dengan zoom<br>🎨 <b>Tema kustom</b>: 5 tema premium dan warna sendiri<br>👑 <b>Bingkai avatar emas</b>, permanen selamanya</div>'+(INFO?'<p class="k">'+esc(INFO)+'</p>':'')+UIDH()+(JE.supPrice?'<p style="text-align:center">Harga: <b>'+esc(JE.supPrice)+'</b> sekali bayar, permanen</p>':'')+(JE.qris?'<div style="text-align:center"><img src="'+esc(JE.qris)+'" alt="QRIS" style="max-width:100%;width:240px;border-radius:12px;background:#fff;padding:6px"></div>'+'<div class="k" style="text-align:center;margin:4px 0">Bayar dari HP yang sama? Tahan gambar lalu simpan, kemudian pilih lewat menu galeri atau "Upload QR" di aplikasi pembayaranmu.</div>'+(JE.name?'<div class="k" style="text-align:center">'+esc(JE.name)+'</div>':''):'<div class="c k">QRIS belum diatur oleh admin.</div>')+'<div class="c k"><b>Cara aktifkan:</b><br>1. Scan QRIS dan bayar sesuai harga<br>2. Kirim bukti bayar + ID pemain kamu ke admin<br>3. Admin membalas dengan <b>kode klaim</b><br>4. Masukkan kode di bawah</div><p class="k">Semua ini kosmetik dan tidak mengubah keseimbangan permainan.</p><input id="supcode" placeholder="JK-XXXX-XXXX" autocomplete="off" autocapitalize="characters" maxlength="14" style="text-transform:uppercase;letter-spacing:2px;font-weight:700;text-align:center"><button class="b" onclick="supClaim()">🎟️ Klaim kode</button>'+(JE.contact?'<a href="'+esc(waLink('Halo min, saya baru saja upgrade Juragan Eksklusif (Rp55.500). ID pemain: '+uid()+'. Berikut bukti pembayarannya.'))+'" target="_blank" rel="noopener"><button class="b s">📨 Kirim bukti ke admin</button></a>':'')+'<button class="b s" onclick="supChk()">🔄 Cek status</button><button class="b s" onclick="supRestore()">♻️ Pakai ID lama</button><button class="b s" onclick="closeM()">Tutup</button>');return}
-modal('<h2>👑 Juragan Eksklusif</h2><p class="k">Terima kasih sudah mendukung! Bingkai avatar kamu permanen.</p><div class="k" style="text-align:center">ID Pemain: <b>'+esc(o.c)+'</b></div><button class="b s tile" onclick="supAva()"><span>🖼️</span>Avatar dan bingkai</button><button class="b s tile" onclick="supThm()"><span>🎨</span>Tema dan warna</button><button class="b s" onclick="closeM()">Tutup</button>')};
+modal('<h2>👑 Juragan Eksklusif</h2><p class="k">Terima kasih sudah mendukung! Bingkai avatar kamu permanen.</p><div class="k" style="text-align:center">ID Pemain: <b>'+esc(o.c)+'</b></div><button class="b s tile" onclick="supAva()"><span>🖼️</span>Avatar dan bingkai</button><button class="b s tile" onclick="xtOpen()"><span>✨</span>Gelar, bingkai &amp; skin</button><button class="b s tile" onclick="supThm()"><span>🎨</span>Tema dan warna</button><button class="b s" onclick="closeM()">Tutup</button>')};
 window.supRestore=()=>modal('<h2>♻️ Pakai ID lama</h2><p class="k">Ganti perangkat atau data browser terhapus? Masukkan ID lamamu agar status Juragan Eksklusif kembali. ID ini akan menggantikan ID di perangkat ini.</p><input id="supu" placeholder="JE-XXXXXX" autocomplete="off" autocapitalize="characters" maxlength="12"><button class="b" onclick="supRestoreGo()">Pulihkan</button><button class="b s" onclick="supOpen()">Batal</button>');
 window.supRestoreGo=async()=>{const r=($('#supu').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');const u='JE-'+r.slice(2);if(r.slice(0,2)!=='JE'||!UR.test(u)){toast('Format ID tidak valid','');return}sv(UK,u);window.tkSync&&tkSync(true);if(!await sync(true))supOpen()};
 window.supAva=()=>{if(!st())return;const has=!!ld(IK),zv=gp(ZK,100),fr=gp(FK,'1')!='0';
@@ -1630,7 +1630,7 @@ const RK='etid_rk_';
 const wk=()=>{const d=new Date(Date.now()+7*36e5),t=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));const y=t.getUTCFullYear();return y+'-W'+String(Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7)).padStart(2,'0')};
 const uid=()=>{const u=ld('etid_uid');return /^JE-[A-Z2-9]{6}$/.test(u||'')?u:''};
 const bs=()=>{const k=RK+slot;let b=null;try{b=JSON.parse(ld(k)||'null')}catch(e){}const w=wk();if(!b||b.w!==w||typeof b.p0!='number'){b={w,p0:Math.round(wealth()),k0:G.delivered||0};sv(k,JSON.stringify(b))}return b};
-const snap=()=>{const b=bs();let n=String(G.owner||G.name||'').trim();if(n.length<3)n='Juragan '+uid().slice(-4);return{uid:uid(),name:n,co:G.name||'',p:Math.round(wealth()-b.p0),k:(G.delivered||0)-b.k0,l:G.lvl,r:Math.round(G.rep)}};
+const snap=()=>{const b=bs();let n=String(G.owner||G.name||'').trim();if(n.length<3)n='Juragan '+uid().slice(-4);return{uid:uid(),name:n,co:G.name||'',p:Math.round(wealth()-b.p0),k:(G.delivered||0)-b.k0,l:G.lvl,r:Math.round(G.rep),g:window.XT?XT.g():0,w:window.XT?XT.w():0}};
 let D=null,T='profit',busy=false,err='',last=0,lastLoad=0,demo=false;
 const send=async force=>{if(!G||!uid()||(!force&&Date.now()-last<25000))return;last=Date.now();try{await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(snap())})}catch(e){}};
 const load=async()=>{if(busy)return;busy=true;err='';demo=false;render();try{await send(true);const r=await fetch('/api/leaderboard?uid='+uid(),{cache:'no-store'});if(!r.ok)throw new Error('http '+r.status);D=await r.json();lastLoad=Date.now();await dmLoad()}catch(e){err='Tidak bisa memuat peringkat ('+(e.message||e)+')'}busy=false;render()};
@@ -1699,15 +1699,18 @@ const av=(r,sz,tier)=>{
  }
  return '<span class="'+cls+'" style="width:'+sz+'px;height:'+sz+'px">'+crown+'<span class="ra" style="width:'+sz+'px;height:'+sz+'px">'+inner+'</span></span>';
 };
+const xav=(r,sz,t)=>r.s&&r.w?'<span class="xw'+(+r.w)+'">'+av(r,sz,t)+'</span>':av(r,sz,t);
+const xnm=r=>(r.s?'<span class="xn">👑 ':'<span>')+(r.me?'Kamu · ':'')+esc(r.n)+'</span>';
+const xti=r=>r.s&&window.XT&&XT.title(r.g)?XT.title(r.g)+' · ':'';
 const val=(r,T)=>T=='profit'?rp(r.p):T=='pkgs'?nf(r.k)+' paket':'Lv '+r.l;
 const sub2=(r,T)=>T=='lvl'?'Reputasi '+r.r:(r.c||'');
 const vshort=(r,T)=>T=='profit'?'Rp'+short(r.p):T=='pkgs'?nf(r.k):'Lv '+r.l;
 const podium=top=>{
  const o=[[1,top[1]],[0,top[0]],[2,top[2]]];
  return '<div class="rkp">'+o.map(x=>{const r=x[1],i=x[0];if(!r)return '<div></div>';
-  return '<div class="p'+(i+1)+'">'+av(r,i==0?76:60,i+1)+'<div class="nm">'+(r.me?'Kamu · ':'')+esc(r.n)+'</div><div class="co">'+esc(r.c||'')+'</div><div class="bs"><b>'+(i+1)+'</b><small>'+vshort(r,T)+'</small></div></div>'}).join('')+'</div>';
+  return '<div class="p'+(i+1)+'">'+xav(r,i==0?76:60,i+1)+'<div class="nm">'+xnm(r)+'</div><div class="co">'+esc(xti(r)+(r.c||''))+'</div><div class="bs"><b>'+(i+1)+'</b><small>'+vshort(r,T)+'</small></div></div>'}).join('')+'</div>';
 };
-const row=(r,T)=>'<div class="c rkr'+(r.me?' me':'')+'"><div class="no">'+r.pos+'</div>'+av(r,44,0)+'<div class="in"><b>'+(r.me?'Kamu · ':'')+esc(r.n)+'</b><div class="k">'+esc(sub2(r,T))+'</div></div><div class="vl">'+val(r,T)+(T=='profit'?'<div class="k">Lv '+r.l+'</div>':T=='pkgs'?'<div class="k">Lv '+r.l+'</div>':'')+'</div></div>';
+const row=(r,T)=>'<div class="c rkr'+(r.me?' me':'')+'"><div class="no">'+r.pos+'</div>'+xav(r,44,0)+'<div class="in"><b>'+xnm(r)+'</b><div class="k">'+esc(xti(r)+sub2(r,T))+'</div></div><div class="vl">'+val(r,T)+(T=='profit'?'<div class="k">Lv '+r.l+'</div>':T=='pkgs'?'<div class="k">Lv '+r.l+'</div>':'')+'</div></div>';
 /* Hadiah misi peringkat online (mingguan). min = jumlah pemain minimal */
 const RW=[
  {id:'ikut',n:'Masuk peringkat online',a:1e7,min:1,ok:(p,k)=>p>0},
@@ -1880,4 +1883,64 @@ try{const g=GRP.find(x=>x.k=='eks');if(g&&!g.m.some(x=>x[0]=='mkt'))g.m.push(['m
 try{const ea=extraAct;extraAct=function(){let x='';try{if(G&&G.mk){const k=mkE();if(k.a.length){const t=Math.max.apply(null,k.a.map(y=>y.u));x='<div class="act ok" onclick="goMore(\'mkt\')"><span>📣</span><span>Iklan aktif: permintaan x'+mkM().toFixed(2)+' sampai '+date(t)+'</span></div>'}}}catch(e){}return x+ea.apply(this,arguments)}}catch(e){}
 })();
 </script>
+<script>
+/* ===== Eksklusif tambahan: badge, gelar, bingkai animasi, skin armada (tampilan saja) ===== */
+(()=>{
+const get=k=>{try{return +localStorage.getItem(k)||0}catch(e){return 0}};
+const on=()=>{try{const o=JSON.parse(localStorage.getItem('etid_sup')||'null');return !!(o&&o.ok===1)}catch(e){return false}};
+const TT=['','Sultan Ekspedisi','Raja Jalanan','Bos Kargo','Legenda Logistik'];
+const FW=['Tanpa','🔥 Api','❄️ Es','🌈 Pelangi'];
+const SK=[['Standar',{}],['🏎️ Sport',{motor:'🏍️',van:'🚙',pickup:'🛻',truk:'🚚',trukb:'🚛',motorev:'🏍️',vanev:'🚙'}],['👑 Sultan',{motor:'🛵✨',van:'🚐✨',pickup:'🛻✨',truk:'🚚✨',trukb:'🚛✨',motorev:'🛵✨',vanev:'🚐✨',pickupev:'🛻✨',trukev:'🚚✨',trukbev:'🚛✨'}]];
+const BASE=Object.assign({},VI);
+const val=(k,list)=>on()&&list[get(k)]!==undefined?get(k):0;
+window.XT={title:i=>TT[i]||'',g:()=>val('etid_xg',TT),w:()=>val('etid_xw',FW)};
+const css=document.createElement('style');css.textContent='.rkm{background:var(--cd);border-radius:16px;padding:4px}.rkm .rkr{margin:0}.rkm>.c.k{box-shadow:none;border:0;padding:4px}.rkr .no{width:auto;min-width:28px;white-space:nowrap}.xn{color:#c8920a}.xw1,.xw2,.xw3{display:inline-block;animation:xwg 1.6s ease-in-out infinite alternate}.xw1{--x:#ff6a00}.xw2{--x:#38bdf8}.xw3{--x:#e879f9;animation:xwr 3s linear infinite}@keyframes xwg{from{filter:drop-shadow(0 0 1px var(--x))}to{filter:drop-shadow(0 0 7px var(--x))}}@keyframes xwr{from{filter:drop-shadow(0 0 6px var(--x)) hue-rotate(0deg)}to{filter:drop-shadow(0 0 6px var(--x)) hue-rotate(360deg)}}';document.head.appendChild(css);
+const deco=()=>{Object.assign(VI,BASE,SK[val('etid_xs',SK)][1]);
+ const lg=document.querySelector('#top .lg'),ti=document.querySelector('#top .ti');
+ if(lg){lg.classList.remove('xw1','xw2','xw3');if(XT.w())lg.classList.add('xw'+XT.w())}
+ if(ti){let e=ti.querySelector('.xg');const t=XT.title(XT.g());if(!t){if(e)e.remove()}else{if(!e){e=document.createElement('small');e.className='xg xn';ti.appendChild(e)}if(e.textContent!=='👑 '+t)e.textContent='👑 '+t}}};
+const r0=render;render=function(){deco();const r=r0.apply(this,arguments);deco();return r};
+const pick=(label,key,names)=>'<div class="k" style="margin-top:10px">'+label+'</div><div>'+names.map((n,i)=>'<button class="b pth'+(get(key)==i?'':' s')+'" onclick="xtSet(\''+key+'\','+i+')">'+(n||'Tanpa')+'</button>').join('')+'</div>';
+window.xtOpen=()=>{if(!on())return;modal('<h2>✨ Gelar, bingkai &amp; skin</h2>'+pick('Gelar','etid_xg',TT)+pick('Bingkai animasi','etid_xw',FW)+pick('Skin armada','etid_xs',SK.map(x=>x[0]))+'<div class="k">Hanya tampilan. Gelar dan bingkai terlihat di peringkat setelah skor terkirim.</div><button class="b s" onclick="supOpen()">Kembali</button>')};
+window.xtSet=(k,i)=>{try{localStorage.setItem(k,String(i))}catch(e){}render();xtOpen();window.rkSend&&rkSend()};
+deco();
+})();
+</script>
+
+<style id="rapi">
+/* ===== RAPI: font, tab, tombol, dan kartu seragam ===== */
+html body button,html body input,html body select,html body textarea{font-family:inherit}
+html body .tile,html body .tm,html body .tkc,html body .ts,html body .fm,html body .nb,html body .lvb{font-family:inherit}
+html body .b{display:inline-flex;align-items:center;justify-content:center;gap:4px;line-height:1.2;text-align:center;vertical-align:middle}
+
+/* Tab: kolom sama lebar, label tidak terpotong, geser bila layar sempit */
+html body .tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(max-content,1fr);gap:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 0 10px;padding:0 0 3px}
+html body .tabs::-webkit-scrollbar{display:none}
+html body .tabs .b{flex:none;min-width:0;min-height:40px;margin:0;padding:0 8px;font-size:12.5px;font-weight:700;white-space:nowrap;border-radius:12px}
+html body .tabs:has(.tb){gap:4px}
+html body .tabs .b.tb{flex-direction:column;gap:2px;padding:5px 2px;min-height:50px;font-size:11px}
+html body .tabs .b .ti{font-style:normal;font-size:17px;line-height:1}
+html body .tabs .b .tl{line-height:1.1}
+@media(min-width:700px){
+html body .tabs{gap:8px}
+html body .tabs .b{padding:0 16px;font-size:13.5px;min-height:42px}
+html body .tabs .b.tb{flex-direction:row;gap:6px;padding:0 14px;min-height:42px;font-size:13.5px}
+html body .tabs .b .ti{font-size:16px}
+}
+
+/* Kartu beli armada dan rekrut kurir: judul 2 baris tetap, tombol selalu sejajar di bawah */
+html body .hd{display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start;gap:2px 6px;min-height:2.7em;line-height:1.3}
+html body .g>.c:has(>button.b:only-of-type){display:flex;flex-direction:column;gap:4px}
+html body .g>.c:has(>button.b:only-of-type)>.k{flex:1 1 auto}
+html body .g>.c:has(>button.b:only-of-type)>button.b{flex:none;width:100%;margin:8px 0 0;min-height:42px}
+
+/* Baris armada dan kurir: tombol aksi sama lebar dan sejajar */
+html body .vc .fl{flex:1 1 180px}
+html body .vc>div:has(>button){flex:1 1 100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px}
+html body .vc>div:has(>button)>.b{width:100%;margin:0;min-height:38px;padding:6px 8px;font-size:12.5px;line-height:1.2}
+@media(min-width:700px){html body .vc>div:has(>button){flex:0 1 440px}}
+
+/* Menu bawah: 7 label muat tanpa terpotong */
+@media(max-width:699px){html body nav button{font-size:clamp(9px,2.6vw,10.5px)!important;letter-spacing:-.01em;text-overflow:ellipsis}}
+</style>
 </body></html>
