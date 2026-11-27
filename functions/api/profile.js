@@ -37,7 +37,7 @@ export async function onRequestGet({ request, env }) {
   return J(await out(await load(env, uid), uid, env));
 }
 
-export async function onRequestPost({ request, env }) {
+async function post({ request, env }) {
   if (!env.RANK) return J({ err: 'not configured' }, 500);
   let b;
   try { b = await request.json(); } catch { return J({ err: 'bad json' }, 400); }
@@ -82,4 +82,10 @@ export async function onRequestPost({ request, env }) {
   const res = await out(p, uid, env);
   if (grant) res.cash = grant;
   return J(res);
+}
+
+// Bila KV gagal (mis. kuota tulis harian gratis habis), balas 503 {err:'kv'} agar game bisa menampilkan pesan jelas.
+// Diamond tidak terpotong karena penyimpanan gagal sebelum data berubah.
+export async function onRequestPost(ctx) {
+  try { return await post(ctx); } catch (e) { return J({ err: 'kv' }, 503); }
 }
