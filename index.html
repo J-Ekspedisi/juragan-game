@@ -331,7 +331,7 @@ function modal(h){SM.play('open');$('#modal').innerHTML='<div class="mb">'+h+'</
 function closeM(){SM.play('close');$('#modal').classList.remove('on');$('#modal').innerHTML=''}
 function peek(i){try{const g=JSON.parse(ld('etid_s'+i));return validate(g)?g:null}catch(e){return null}}
 function menu(){G=null;$('#menu').classList.add('on');let h='<div class="mb"><h1>🚚 Juragan Ekspedisi</h1><p class="k">Bangun kerajaan ekspedisimu dari nol</p>';
-for(let i=1;i<=3;i++){const g=peek(i);h+='<div class="c"><b>Slot '+i+'</b> '+(g?'<span class="sl0">'+logoH(g.logo,22)+'</span> '+esc(g.name)+(g.slogan?'<div class="k"><i>“'+esc(g.slogan)+'”</i></div>':'')+'<div class="k">'+esc(g.owner)+' - '+rp(g.cash)+' - Lv '+g.lvl+(g.over?' - BANGKRUT':'')+'</div><button class="b" onclick="cont('+i+')">Lanjutkan</button><button class="b s" onclick="expo('+i+')">Export</button><button class="b d" onclick="del('+i+')">Hapus</button>':(ld('etid_s'+i)?'<span class="rd">Save rusak</span> <button class="b d" onclick="del('+i+')">Hapus</button>':'<div class="k">Kosong</div><button class="b" onclick="newDlg('+i+')">New Game</button>'))+'</div>'}
+for(let i=1;i<=1;i++){const g=peek(i);h+='<div class="c"><b>Slot '+i+'</b> '+(g?'<span class="sl0">'+logoH(g.logo,22)+'</span> '+esc(g.name)+(g.slogan?'<div class="k"><i>“'+esc(g.slogan)+'”</i></div>':'')+'<div class="k">'+esc(g.owner)+' - '+rp(g.cash)+' - Lv '+g.lvl+(g.over?' - BANGKRUT':'')+'</div><button class="b" onclick="cont('+i+')">Lanjutkan</button><button class="b s" onclick="expo('+i+')">Export</button><button class="b d" onclick="del('+i+')">Hapus</button>':(ld('etid_s'+i)?'<span class="rd">Save rusak</span> <button class="b d" onclick="del('+i+')">Hapus</button>':'<div class="k">Kosong</div><button class="b" onclick="newDlg('+i+')">New Game</button>'))+'</div>'}
 h+='<button class="b s" onclick="impDlg()">Import Save</button><button class="b s" onclick="setDlg()">Pengaturan</button></div>';$('#menu').innerHTML=h}
 function cont(i){if(load(i)){$('#menu').classList.remove('on');page='home';render();if(G.pev!=null)showEv()}}
 function del(i){if(confirm('Hapus profil slot '+i+' secara permanen?')){try{localStorage.removeItem('etid_s'+i)}catch(e){}menu()}}
@@ -354,7 +354,7 @@ const TUT=[['📦 Cara kerja','Paket masuk otomatis. Kurir dan kendaraan sehat m
 ['💰 Jaga kas','Gaji, pajak, dan cicilan dibayar tiap 30 hari. Kas negatif 14 hari berarti bangkrut. Game tersimpan otomatis tiap hari dalam permainan.']];
 function tutorial(i){const t=TUT[i],last=i==TUT.length-1;modal(`<h2>${t[0]}</h2><p>${t[1]}</p><div class="k">${i+1} / ${TUT.length}</div>${i?`<button class="b s" onclick="tutorial(${i-1})">Kembali</button>`:''}<button class="b" onclick="${last?'closeM()':`tutorial(${i+1})`}">${last?'Mulai bermain':'Lanjut'}</button>${last?'':'<button class="b s" onclick="closeM()">Lewati</button>'}`)}
 function expo(i){modal('<h3>Export Save</h3><p class="k">Salin teks JSON ini dan simpan sebagai cadangan.</p><textarea rows="8" readonly onclick="this.select()">'+esc(ld('etid_s'+i)||'')+'</textarea><button class="b" onclick="closeM()">Tutup</button>')}
-function impDlg(){modal('<h3>Import Save</h3><textarea id="ij" rows="8" placeholder="Tempel JSON save"></textarea><select id="isl"><option>1</option><option>2</option><option>3</option></select><button class="b" onclick="doImp()">Import</button><button class="b s" onclick="closeM()">Batal</button>')}
+function impDlg(){modal('<h3>Import Save</h3><textarea id="ij" rows="8" placeholder="Tempel JSON save"></textarea><select id="isl"><option>1</option></select><button class="b" onclick="doImp()">Import</button><button class="b s" onclick="closeM()">Batal</button>')}
 function doImp(){try{const g=JSON.parse($('#ij').value);if(!validate(g))throw 0;const i=$('#isl').value;if(ld('etid_s'+i)&&!confirm('Slot '+i+' terisi. Timpa?'))return;sv('etid_s'+i,JSON.stringify(migrate(g)));closeM();menu()}catch(e){alert('Data tidak valid.')}}
 function setDlg(){modal('<h3>Pengaturan Game</h3><label class="k">Modal awal (untuk game baru)</label><input id="sc" type="number" value="'+cfg.cap+'"><button class="b" onclick="cfg.cap=Math.max(1e6,+$(\'#sc\').value||1e8);sv(\'etid_cfg\',JSON.stringify(cfg));closeM()">Simpan</button><button class="b s" onclick="closeM()">Tutup</button>')}
 const PG=[['home','🏠','Beranda'],['ops','📦','Operasional'],['map','🗺️','Peta'],['misi','🎯','Misi'],['more','☰','Lainnya']];
@@ -1195,7 +1195,7 @@ function pxCard(){const x=pxEns();return '<div class="c"><b>⭐ Layanan Premium<
 const _pkg7=P.pkg;P.pkg=function(){return pxCard()+_pkg7.apply(this,arguments)};
 
 menu();
-$('#splash').onclick=()=>{const s=$('#splash');s.classList.add('out');setTimeout(()=>s.remove(),450);if(![1,2,3].some(i=>ld('etid_s'+i)))newDlg(1)};
+$('#splash').onclick=()=>{const s=$('#splash');s.classList.add('out');setTimeout(()=>s.remove(),450);if(![1].some(i=>ld('etid_s'+i)))newDlg(1)};
 
 /* ===== V2.8: navigasi dirapikan, Ekspansi terpadu, peringatan staf ===== */
 const GRP=[
@@ -1273,7 +1273,7 @@ EV.push(
 cfg.cap=1e8;try{sv('etid_cfg',JSON.stringify(cfg))}catch(e){}
 window.setDlg=function(){modal('<h3>Pengaturan Game</h3><p>Modal awal perusahaan baru tetap <b>'+rp(1e8)+'</b> untuk semua pemain, supaya permainan dan peringkat adil.</p><button class="b" onclick="closeM()">Tutup</button>')};
 const sp=document.getElementById('splash');
-if(sp)sp.onclick=function(){sp.onclick=null;sp.classList.add('out');setTimeout(()=>{sp.remove();if(![1,2,3].some(i=>ld('etid_s'+i)))newDlg(1)},450)};
+if(sp)sp.onclick=function(){sp.onclick=null;sp.classList.add('out');setTimeout(()=>{sp.remove();if(![1].some(i=>ld('etid_s'+i)))newDlg(1)},450)};
 })();
 </script>
 <script>
@@ -1522,7 +1522,7 @@ try{const h=P.home;if(h)P.home=function(){return h.apply(this,arguments)+(st()||
 const mc=()=>{const p=document.querySelector('#menu .mb p.k');if(p&&!document.querySelector('#menu .pcard'))p.insertAdjacentHTML('afterend',card())};
 try{const m=menu;menu=function(){m.apply(this,arguments);mc()}}catch(e){}
 try{const r=render;render=function(){apply();return r.apply(this,arguments)}}catch(e){}
-mc();apply();uid();
+apply();if(!G)menu();mc();uid();
 setTimeout(()=>sync(false),1500);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('supwait'))sync(false)});
 })();
@@ -1633,7 +1633,7 @@ const bs=()=>{const k=RK+slot;let b=null;try{b=JSON.parse(ld(k)||'null')}catch(e
 const snap=()=>{const b=bs();let n=String(G.owner||G.name||'').trim();if(n.length<3)n='Juragan '+uid().slice(-4);return{uid:uid(),name:n,co:G.name||'',p:Math.round(wealth()-b.p0),k:(G.delivered||0)-b.k0,l:G.lvl,r:Math.round(G.rep)}};
 let D=null,T='profit',busy=false,err='',last=0,lastLoad=0,demo=false;
 const send=async force=>{if(!G||!uid()||(!force&&Date.now()-last<25000))return;last=Date.now();try{await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(snap())})}catch(e){}};
-const load=async()=>{if(busy)return;busy=true;err='';demo=false;render();try{await send(true);const r=await fetch('/api/leaderboard?uid='+uid(),{cache:'no-store'});if(!r.ok)throw new Error('http '+r.status);D=await r.json();lastLoad=Date.now()}catch(e){err='Tidak bisa memuat peringkat ('+(e.message||e)+')'}busy=false;render()};
+const load=async()=>{if(busy)return;busy=true;err='';demo=false;render();try{await send(true);const r=await fetch('/api/leaderboard?uid='+uid(),{cache:'no-store'});if(!r.ok)throw new Error('http '+r.status);D=await r.json();lastLoad=Date.now();await dmLoad()}catch(e){err='Tidak bisa memuat peringkat ('+(e.message||e)+')'}busy=false;render()};
 const rs=()=>{const n=Date.now(),d=new Date(n+7*36e5),dy=d.getUTCDay()||7,ms=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+8-dy)-(n+7*36e5),h=Math.floor(ms/36e5);return Math.floor(h/24)+' hari '+h%24+' jam'};
 const css=document.createElement('style');css.textContent=`
 .rkh{background:linear-gradient(135deg,#2563C7,#45A9F5 60%,#7cc4ff);color:#fff;border-radius:20px;padding:14px 16px;margin-bottom:10px;box-shadow:0 4px 14px #2563c744;position:relative;overflow:hidden}
@@ -1708,6 +1708,23 @@ const podium=top=>{
   return '<div class="p'+(i+1)+'">'+av(r,i==0?76:60,i+1)+'<div class="nm">'+(r.me?'Kamu · ':'')+esc(r.n)+'</div><div class="co">'+esc(r.c||'')+'</div><div class="bs"><b>'+(i+1)+'</b><small>'+vshort(r,T)+'</small></div></div>'}).join('')+'</div>';
 };
 const row=(r,T)=>'<div class="c rkr'+(r.me?' me':'')+'"><div class="no">'+r.pos+'</div>'+av(r,44,0)+'<div class="in"><b>'+(r.me?'Kamu · ':'')+esc(r.n)+'</b><div class="k">'+esc(sub2(r,T))+'</div></div><div class="vl">'+val(r,T)+(T=='profit'?'<div class="k">Lv '+r.l+'</div>':T=='pkgs'?'<div class="k">Lv '+r.l+'</div>':'')+'</div></div>';
+/* Hadiah misi peringkat online (mingguan). min = jumlah pemain minimal */
+const RW=[
+ {id:'ikut',n:'Masuk peringkat online',a:1e7,min:1,ok:(p,k)=>p>0},
+ {id:'kirim',n:'Kirim 50 paket minggu ini',a:25e6,min:1,ok:(p,k)=>p>0&&k>=50},
+ {id:'top10',n:'Posisi 10 besar',a:5e7,min:11,ok:(p,k)=>p>0&&p<=10},
+ {id:'top3',n:'Juara 1 / 2 / 3',a:1e8,t:[25e7,15e7,1e8],min:5,ok:(p,k)=>p>0&&p<=3}];
+const rwDone=()=>{if(!G.rkc||G.rkc.w!==wk())G.rkc={w:wk(),d:{}};return G.rkc.d};
+const rwPos=()=>{const v=['profit','pkgs'].map(t=>{const m=D&&D.cats[t]&&D.cats[t].me;return m?m.pos:0}).filter(x=>x>0);return v.length?Math.min(...v):0};
+const rwCan=m=>!!D&&!demo&&!err&&Date.now()-lastLoad<3e5&&D.total>=m.min&&m.ok(rwPos(),snap().k)&&!rwDone()[m.id];
+const rwAmt=m=>m.t&&m.t[rwPos()-1]||m.a;
+const rwCard=()=>{if(!G||demo)return '';const d=rwDone();return '<div class="c"><b>🎁 Misi Peringkat Mingguan</b>'+RW.map(m=>'<div style="margin-top:10px">'+(d[m.id]?'✅ ':'🎯 ')+m.n+' <b>'+(m.t?m.t.map(rp).join(' / '):rp(m.a))+'</b>'+(m.min>1?'<div class="k">Minimal '+m.min+' pemain</div>':'')+(rwCan(m)?'<br><button class="b" onclick="rkClaim(\''+m.id+'\')">Klaim</button>':'')+'</div>').join('')+'<div class="k" style="margin-top:8px">Posisi dihitung dari peringkat Laba atau Paket. Hadiah tidak menambah skor Laba.</div></div>'};
+window.rkClaim=id=>{const m=RW.find(x=>x.id==id);if(!m||!G||!rwCan(m)){toast('Perbarui peringkat dulu','');return}const a=rwAmt(m);rwDone()[id]=1;window.rkAdj(a);tx('Modal','Hadiah peringkat: '+m.n,a);save();toast('🎁 +'+rp(a),'gold');render()};
+/* Hadiah diamond: dihitung dan dikreditkan server untuk hasil minggu lalu */
+let DM=null,dmBusy=false;
+const dmLoad=async()=>{try{const r=await fetch('/api/reward?uid='+uid(),{cache:'no-store'});DM=r.ok?await r.json():null}catch(e){DM=null}};
+const dmCard=()=>'<div class="c"><b>💎 Hadiah Diamond Mingguan</b><div class="k">Juara 1: 50 · Juara 2: 30 · Juara 3: 20 · Peringkat 4-10: 10. Minimal 5 pemain, diklaim setelah minggu berakhir.</div>'+(DM&&DM.gem?'<div style="margin-top:8px">Minggu lalu kamu peringkat <b>'+(+DM.pos)+'</b>: 💎 '+(+DM.gem)+'</div>'+(DM.claimed?'<div class="k">✅ Sudah diklaim</div>':'<button class="b" onclick="dmClaim()">Klaim diamond</button>'):'')+'</div>';
+window.dmClaim=async()=>{if(dmBusy)return;dmBusy=true;try{const r=await fetch('/api/reward',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:uid()})});const j=await r.json();if(!r.ok)throw 0;toast('💎 +'+j.added+' diamond','gold');window.tkSync&&tkSync(true)}catch(e){toast('Gagal klaim diamond','')}await dmLoad();dmBusy=false;render()};
 P.rank=function(){
  if(!D&&!busy&&!err)setTimeout(load,0);else if(D&&!demo&&!busy&&Date.now()-lastLoad>60000)setTimeout(load,0);
  const tb=[['profit','💰 Laba'],['pkgs','📦 Paket'],['lvl','⭐ Level']];
@@ -1720,12 +1737,12 @@ P.rank=function(){
   if(!top.length)h+='<div class="c k" style="text-align:center">Belum ada pemain minggu ini. Jadilah yang pertama! 🚀</div>';
   else{
    h+=podium(top);
-   h+=top.slice(3).map(r=>row(r,T)).join('');
-   if(c.me&&!top.some(r=>r.me)){const sn=snap(),m=Object.assign({},c.me,{me:true,n:c.me.n||sn.name,c:c.me.c||sn.co,p:c.me.p!=null?c.me.p:sn.p,k:c.me.k!=null?c.me.k:sn.k,l:c.me.l!=null?c.me.l:sn.l,r:c.me.r!=null?c.me.r:sn.r});h+='<div class="rkm">'+row(m,T)+'</div>'}
+   h+=top.slice(3,10).map(r=>row(r,T)).join('');
+   if(c.me&&!top.slice(0,10).some(r=>r.me)){const sn=snap(),m=Object.assign({},c.me,{me:true,n:c.me.n||sn.name,c:c.me.c||sn.co,p:c.me.p!=null?c.me.p:sn.p,k:c.me.k!=null?c.me.k:sn.k,l:c.me.l!=null?c.me.l:sn.l,r:c.me.r!=null?c.me.r:sn.r});h+='<div class="rkm"><div class="c k" style="text-align:center;margin-bottom:4px"><b>Kamu berada di peringkat '+m.pos+'</b></div>'+row(m,T)+'</div>'}
    else if(!c.me)h+='<div class="c k" style="text-align:center">Kamu belum masuk peringkat. Kirim paket untuk mulai naik! 📦</div>';
   }
  }
- return h+'<div style="text-align:center"><button class="b s" onclick="rkLoad()">🔄 Perbarui</button></div><div class="c k">Laba dihitung dari kenaikan kekayaan sejak game pertama dibuka minggu ini. Skor dikirim otomatis saat online, dan skor yang tidak wajar ditolak server. Avatar dan bingkai yang kamu pakai di Toko tampil di barismu.</div>'};
+ return h+rwCard()+(demo?'':dmCard())+'<div style="text-align:center"><button class="b s" onclick="rkLoad()">🔄 Perbarui</button></div><div class="c k">Laba dihitung dari kenaikan kekayaan sejak game pertama dibuka minggu ini. Skor dikirim otomatis saat online, dan skor yang tidak wajar ditolak server. Avatar dan bingkai yang kamu pakai di Toko tampil di barismu.</div>'};
 window.rkDemo=()=>{const N=[['Budi Santoso','Budi Express'],['Sari Wulandari','Sari Logistik'],['Andi Pratama','Pratama Cargo'],['Dewi Lestari','Lestari Kurir'],['Rizky Hakim','Hakim Trans'],['Maya Putri','Maya Antar'],['Joko Widodo','Joko Jaya'],['Nina Kartika','Kartika Ekspres'],['Fajar Nugroho','Fajar Motor'],['Lina Marlina','Marlina Pack']];
  const mk=()=>{const t=N.map((x,i)=>({pos:i+1,n:x[0],c:x[1],p:Math.round(480e6*Math.pow(.72,i)),k:Math.round(2400*Math.pow(.8,i)),l:25-i*2,r:90-i*3,f:[0,1,4,-1,3,-1,5,7,-1,9][i],me:false}));const m=5;t[m].me=true;t[m].n=String(G.owner||G.name||'Kamu');t[m].c=G.name||'';return{top:t,me:{pos:m+1}}};
  D={total:48,cats:{profit:mk(),pkgs:mk(),lvl:mk()}};demo=true;err='';render()};
@@ -1759,7 +1776,7 @@ const upSlot=async(i,force)=>{const raw=ld('etid_s'+i);if(!raw)return 0;let g;tr
  const m={n:String(g.name||''),o:String(g.owner||''),c:Math.round(g.cash)||0,l:g.lvl|0};
  try{const j=await call({act:'save',uid:uid(),key:gk(),slot:i,data:await pack(env),t:g.savedAt||Date.now(),base:bases()[i]||0,force:!!force,m});setBase(i,j.srv);delete conf[i];sv(KT,String(Date.now()));return 1}
  catch(e){if(e.s===409){conf[i]=1;return -1}throw e}};
-const upAll=async force=>{let n=0,c=0;for(let i=1;i<=3;i++){const r=await upSlot(i,force);if(r===1)n++;else if(r===-1)c++}return{n,c}};
+const upAll=async force=>{let n=0,c=0;for(let i=1;i<=1;i++){const r=await upSlot(i,force);if(r===1)n++;else if(r===-1)c++}return{n,c}};
 /* simpan otomatis: hemat kuota, jadi jarak antar upload cukup jauh */
 try{const s0=save;save=function(){const r=s0.apply(this,arguments);if(gk())dirty=true;return r}}catch(e){}
 const auto=async gap=>{if(busy||!dirty||!gk()||!uid()||!navigator.onLine||typeof G=='undefined'||!G||!slot||conf[slot])return;if(Date.now()-last<gap)return;busy=true;last=Date.now();
@@ -1790,15 +1807,15 @@ window.cloudList=async()=>{const out=$('#crl'),r=nk($('#cru').value),u='JE-'+r.s
  if(!KR.test(k)){out.innerHTML='<div class="k rd">Format kode pemulihan salah</div>';return}
  out.innerHTML='<div class="k">Mencari…</div>';
  try{const j=await call({act:'list',uid:u,key:k});CUR={u,k};
-  out.innerHTML=j.slots.length?j.slots.map(s=>{const m=s.m||{};return '<div class="c"><b>Cloud slot '+s.slot+'</b><div class="k">'+esc(m.n||'-')+' · '+esc(m.o||'')+' · Rp'+Number(m.c||0).toLocaleString('id-ID')+' · Lv '+(m.l||0)+'<br>Disimpan '+fmt(s.srv||s.t||Date.now())+'</div><button class="b" onclick="cloudPick('+s.slot+')">Pakai ke slot '+s.slot+'</button></div>'}).join(''):'<div class="k">Belum ada data yang tersimpan untuk ID ini.</div>'}
+  out.innerHTML=j.slots.length?j.slots.map(s=>{const m=s.m||{};return '<div class="c"><b>Cloud slot '+s.slot+'</b><div class="k">'+esc(m.n||'-')+' · '+esc(m.o||'')+' · Rp'+Number(m.c||0).toLocaleString('id-ID')+' · Lv '+(m.l||0)+'<br>Disimpan '+fmt(s.srv||s.t||Date.now())+'</div><button class="b" onclick="cloudPick('+s.slot+')">Pakai data ini</button></div>'}).join(''):'<div class="k">Belum ada data yang tersimpan untuk ID ini.</div>'}
  catch(e){out.innerHTML='<div class="k rd">'+esc(ERR[e.message]||'Tidak bisa terhubung ke server')+'</div>'}};
 window.cloudPick=async i=>{if(!CUR||busy)return;const ch=uid()!==CUR.u;
- if(!confirm((ld('etid_s'+i)?'Slot '+i+' di perangkat ini akan ditimpa dengan data cloud.':'Data cloud akan disalin ke slot '+i+'.')+(ch?'\nID pemain di perangkat ini juga akan diganti menjadi '+CUR.u+'.':'')+'\nLanjut?'))return;
+ if(!confirm((ld('etid_s1')?'Save di perangkat ini akan ditimpa dengan data cloud.':'Data cloud akan disalin ke perangkat ini.')+(ch?'\nID pemain di perangkat ini juga akan diganti menjadi '+CUR.u+'.':'')+'\nLanjut?'))return;
  busy=true;
  try{const j=await call({act:'load',uid:CUR.u,key:CUR.k,slot:i});const env=JSON.parse(await unpack(j.data));const g=env&&env.g?env.g:env;if(!validate(g))throw new Error('Data cloud rusak');
-  sv('etid_s'+i,JSON.stringify(migrate(g)));if(env&&env.r)sv('etid_rk_'+i,env.r);
+  sv('etid_s1',JSON.stringify(migrate(g)));if(env&&env.r)sv('etid_rk_1',env.r);
   if(ch){try{localStorage.removeItem('etid_sup')}catch(e){}sv(UK,CUR.u);sv(KB,'{}')}
-  sv(KK,CUR.k);setBase(i,j.srv);sv(KT,String(Date.now()));
+  sv(KK,CUR.k);setBase(1,i==1?j.srv:0);sv(KT,String(Date.now()));
   toast('☁️ Data dipulihkan','gold');setTimeout(()=>location.reload(),700)}
  catch(e){busy=false;toast(ERR[e.message]||e.message||'Gagal memulihkan','')}};
 try{const s=P.set;P.set=function(){return s.apply(this,arguments)+card()}}catch(e){}
