@@ -1817,8 +1817,8 @@ const upAll=async force=>{let n=0,c=0;for(let i=1;i<=1;i++){const r=await upSlot
 try{const s0=save;save=function(){const r=s0.apply(this,arguments);if(gk())dirty=true;return r}}catch(e){}
 const auto=async gap=>{if(busy||!dirty||!gk()||!uid()||!navigator.onLine||typeof G=='undefined'||!G||!slot||conf[slot])return;if(Date.now()-last<gap)return;busy=true;last=Date.now();
  try{const r=await upSlot(slot,false);if(r===1)dirty=false;else if(r===-1)toast('☁️ Cloud punya data lebih baru. Buka Pengaturan > Cloud Save','')}catch(e){}busy=false};
-setInterval(()=>auto(6e5),30000);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)auto(18e4)});
+setInterval(()=>auto(18e5),30000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)auto(6e5)});
 const card=()=>{const k=gk(),t=+ld(KT)||0;
  if(!k)return '<div class="c pcloud"><b>☁️ Cloud Save</b><div class="k">Simpan progres ke server supaya aman saat ganti HP atau data browser terhapus. Gratis.</div><button class="b" onclick="cloudOn()">Aktifkan Cloud Save</button><button class="b s" onclick="cloudRestoreDlg()">Pulihkan dari cloud</button></div>';
  const cf=Object.keys(conf).length;
@@ -2567,7 +2567,7 @@ window.premBuy=async k=>{if(!G)return;const gm=window.tkMe?tkMe.gem():0;if(gm<PR
   if(k=='speed'){G.fx.whd=null;G.staff.forEach(s=>{s.leave=0;s.sick=0});G.veh.forEach(v=>{v.c=Math.max(v.c,85)})}
   if(k=='grace'){if(G.over){G.over=false;G.neg=7}else G.neg=Math.max(0,G.neg-7)}
   log('Premium: '+k);save();window.tkSync&&tkSync(true);closeM();toast('✅ Berhasil dibeli','gold');render()}
- catch(e){toast(e&&e.s?(e.e=='bad act'?'Server belum diperbarui (bad act): deploy profile.js terbaru':e.e=='gem'?'Diamond tidak cukup':'Gagal ('+e.s+(e.e?' '+e.e:'')+')'):'Tidak bisa terhubung ke server','')}};
+ catch(e){toast(e&&e.s?(e.e=='bad act'?'Server belum diperbarui (bad act): deploy profile.js terbaru':e.e=='gem'?'Diamond tidak cukup':e.e=='kv'?'Server sedang penuh atau sibuk. Coba lagi nanti, diamond tidak terpotong.':'Gagal ('+e.s+(e.e?' '+e.e:'')+')'):'Tidak bisa terhubung ke server','')}};
 /* penyelamat bangkrut */
 window.rescue=()=>{const l=Math.max(0,14-G.neg);modal('<h2>🚨 '+(G.over?'Bangkrut':'Sisa '+l+' hari')+'</h2><p>'+(G.over?'Kas negatif 14 hari.':'Kas negatif '+G.neg+' hari. Pada hari ke-14 perusahaan bangkrut.')+' Pilih jalan keluar:</p><button class="b" onclick="tkCash(0)">💎 Suntik modal Rp500 juta (💎100)</button><button class="b" onclick="premBuy(\'grace\')">⏳ Masa tenggang +7 hari (💎'+PR.grace+')</button>'+(G.over?'<button class="b s" onclick="restruct()">Restrukturisasi gratis (separuh kendaraan dijual)</button>':'<button class="b s" onclick="closeM()">Tutup</button>'))};
 const tc0=window.tkCashGo;if(tc0)window.tkCashGo=async function(i){await tc0(i);if(G&&G.over&&G.cash>=0){G.over=false;G.neg=0;save();render()}};
