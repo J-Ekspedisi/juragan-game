@@ -60,6 +60,8 @@ export async function onRequestPost({ request, env }) {
     l: old ? Math.min(Math.max(l, old.l), old.l + 5) : l,
     r,
     f, a: av, v, s: sp,
+    g: sp ? num(b.g, 0, 4) : 0,
+    w: sp ? num(b.w, 0, 3) : 0,
     t: now
   };
   await env.RANK.put(key, JSON.stringify(board), { expirationTtl: 14 * 86400 });
