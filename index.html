@@ -191,7 +191,7 @@ th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}
 .cl{animation:cm 60s linear infinite}.cl2{animation-duration:90s;animation-delay:-30s}.vn{animation:dr 9s linear infinite}.mt{animation:dr 6s linear infinite;animation-delay:-3s}.sw2{animation:sy 3s ease-in-out infinite;transform-origin:bottom}.vn,.mt{animation-direction:reverse}
 @keyframes pop{from{transform:scale(.3);opacity:0}}@keyframes cm{from{transform:translateX(-160px)}to{transform:translateX(560px)}}@keyframes dr{from{transform:translateX(-90px)}to{transform:translateX(500px)}}@keyframes sy{50%{transform:rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){#splash *{animation:none!important}}
-</style></head><body>
+</style><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f2a55"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><style>#boot{position:fixed;inset:0;z-index:99;background:#1f6feb;display:grid;place-items:center;transition:opacity .35s}#boot.x{opacity:0;pointer-events:none}#boot div{text-align:center;color:#fff;font:700 20px system-ui,sans-serif}#boot i{display:block;font-style:normal;font-size:64px;animation:bt 1s ease-in-out infinite}@keyframes bt{50%{transform:translateX(10px)}}</style></head><body><div id="boot"><div><i>🚚</i>Juragan Ekspedisi</div></div>
 <div id="top"></div><nav id="nav"></nav><main id="main"></main><div id="modal"></div><div id="menu" class="on"></div>
 <div id="tt"></div><div id="splash"><svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc7f5"/><stop offset="1" stop-color="#dff3ff"/></linearGradient></defs><rect width="400" height="600" fill="url(#sk)"/><g fill="#fff"><g class="cl"><ellipse cx="60" cy="70" rx="42" ry="16"/><ellipse cx="90" cy="58" rx="28" ry="16"/></g><g class="cl cl2"><ellipse cx="120" cy="150" rx="50" ry="17"/><ellipse cx="150" cy="138" rx="30" ry="16"/></g></g><ellipse cx="200" cy="520" rx="320" ry="70" fill="#b9e8a8"/><rect x="20" y="340" width="120" height="170" rx="8" fill="#ffc8d8"/><rect x="30" y="350" width="100" height="22" rx="5" fill="#12307a"/><text x="80" y="366" font-size="13" font-weight="900" fill="#fff" text-anchor="middle">EKSPEDISI</text><g fill="#fff"><rect x="34" y="385" width="26" height="26" rx="4"/><rect x="100" y="385" width="26" height="26" rx="4"/><rect x="34" y="425" width="26" height="26" rx="4"/><rect x="100" y="425" width="26" height="26" rx="4"/></g><rect x="66" y="460" width="28" height="50" rx="4" fill="#8ed1fc"/><polygon points="160,400 250,360 340,400" fill="#ff9f80"/><rect x="160" y="400" width="180" height="110" fill="#fff3b0"/><rect x="205" y="440" width="90" height="70" rx="4" fill="#ffd166"/><g fill="#c08a3e"><rect x="168" y="485" width="26" height="24"/><rect x="306" y="480" width="28" height="29"/><rect x="312" y="458" width="20" height="22"/></g><rect y="510" width="400" height="90" fill="#8d99ae"/><g stroke="#fff" stroke-width="4" stroke-dasharray="22 18"><line x1="0" y1="558" x2="400" y2="558"/></g><g class="sw2"><rect x="352" y="480" width="6" height="30" fill="#8d5a2b"/><circle cx="355" cy="472" r="18" fill="#6cc070"/></g><circle cx="150" cy="500" r="10" fill="#6cc070"/><text class="vn" y="548" x="0" font-size="46">🚚</text><text class="mt" y="590" x="0" font-size="34">🛵</text></svg><div class="t"><h1>JURAGAN<span>EKSPEDISI</span></h1><p>SIMULATOR BISNIS EKSPEDISI</p></div><div class="tp">MULAI GAME</div></div>
 <script>
@@ -1634,7 +1634,7 @@ const uid=()=>{const u=ld('etid_uid');return /^JE-[A-Z2-9]{6}$/.test(u||'')?u:''
 const bs=()=>{const k=RK+slot;let b=null;try{b=JSON.parse(ld(k)||'null')}catch(e){}const w=wk();if(!b||b.w!==w||typeof b.p0!='number'){b={w,p0:Math.round(wealth()),k0:G.delivered||0};sv(k,JSON.stringify(b))}return b};
 const snap=()=>{const b=bs();let n=String(G.owner||G.name||'').trim();if(n.length<3)n='Juragan '+uid().slice(-4);return{uid:uid(),name:n,co:G.name||'',p:Math.round(wealth()-b.p0),k:(G.delivered||0)-b.k0,l:G.lvl,r:Math.round(G.rep),g:window.XT?XT.g():0,w:window.XT?XT.w():0}};
 let D=null,T='profit',busy=false,err='',last=0,lastLoad=0,demo=false;
-const send=async force=>{if(!G||G.tamper||!uid()||(!force&&Date.now()-last<25000))return;last=Date.now();try{await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(snap())})}catch(e){}};
+const send=async force=>{if(!G||G.tamper||!uid()||(!force&&Date.now()-last<300000))return;const body=JSON.stringify(snap());if(!force&&body===window._lastScore)return;last=Date.now();window._lastScore=body;try{await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:body})}catch(e){}};
 const load=async()=>{if(busy)return;busy=true;err='';demo=false;render();try{await send(true);const r=await fetch('/api/leaderboard?uid='+uid(),{cache:'no-store'});if(!r.ok)throw new Error('http '+r.status);D=await r.json();lastLoad=Date.now();await dmLoad()}catch(e){err='Tidak bisa memuat peringkat ('+(e.message||e)+')'}busy=false;render()};
 const rs=()=>{const n=Date.now(),d=new Date(n+7*36e5),dy=d.getUTCDay()||7,ms=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+8-dy)-(n+7*36e5),h=Math.floor(ms/36e5);return Math.floor(h/24)+' hari '+h%24+' jam'};
 const css=document.createElement('style');css.textContent=`
@@ -1945,4 +1945,41 @@ html body .vc>div:has(>button)>.b{width:100%;margin:0;min-height:38px;padding:6p
 /* Menu bawah: 7 label muat tanpa terpotong */
 @media(max-width:699px){html body nav button{font-size:clamp(9px,2.6vw,10.5px)!important;letter-spacing:-.01em;text-overflow:ellipsis}}
 </style>
-</body></html>
+<style>
+/* === Patch: kurangi teks + animasi === */
+.c{animation:cin .35s ease both}@keyframes cin{from{opacity:0;transform:translateY(8px)}}
+.b{transition:transform .12s,filter .12s}.b:active{transform:scale(.94);filter:brightness(1.15)}
+nav button{transition:color .2s,transform .15s}nav button.on span{animation:nb .5s ease}@keyframes nb{40%{transform:translateY(-4px) scale(1.25)}}
+.fup{animation:fu 1s ease}@keyframes fu{0%{color:var(--gr);transform:scale(1.12)}100%{transform:none}}
+.fdn{animation:fd 1s ease}@keyframes fd{0%{color:var(--rd);transform:scale(1.12)}100%{transform:none}}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.chips span{background:var(--bg);border:1px solid var(--bd);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600;color:var(--tx)}
+.tg{cursor:pointer;display:inline-block;margin-left:6px;font-size:13px;opacity:.7;user-select:none}
+.k.cp{display:none}.k.cp.open{display:block;animation:cin .25s ease}
+@media(prefers-reduced-motion:reduce){.c,.b,nav button span,.fup,.fdn{animation:none!important}}
+</style>
+<script>
+(function(){
+var boot=document.getElementById('boot');function hide(){if(boot){boot.classList.add('x');setTimeout(function(){boot&&boot.remove();boot=null},400)}}
+if(document.readyState==='complete')setTimeout(hide,300);else addEventListener('load',function(){setTimeout(hide,400)});setTimeout(hide,4000);
+var main=document.getElementById('main'),open={},prev={},busy=false,raf=0;
+function num(t){var m=/^([+-]?)\s*Rp\s?([\d.]+)$/.exec(t.trim());return m?(m[1]=='-'?-1:1)*parseInt(m[2].replace(/\./g,''),10):null}
+function fmt(n){return (n<0?'-':'')+'Rp '+Math.abs(Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
+function chips(){main.querySelectorAll('.k').forEach(function(k){
+ var t=k.textContent;
+ if(/Antre pickup/.test(t)&&!k.dataset.ch){var q=/Antre pickup (\d+)/.exec(t),g=/Gudang (\d+\/\d+)/.exec(t),r=/Rute berjalan (\d+)/.exec(t);
+  if(q&&g&&r){k.dataset.ch=1;k.outerHTML='<div class="chips" data-ch="1"><span>📥 '+q[1]+'</span><span>🏭 '+g[1]+'</span><span>🧭 '+r[1]+'</span></div>'}return}
+ if(k.dataset.ch||k.closest('.g')||k.closest('table')||k.previousElementSibling&&k.previousElementSibling.classList.contains('cp'))return;
+ if(t.length>70&&k.parentElement&&k.parentElement.classList.contains('c')){
+  var id=t.slice(0,40),b=k.parentElement.querySelector(':scope>b');if(!b)return;
+  k.classList.add('cp');if(open[id])k.classList.add('open');
+  var s=document.createElement('span');s.className='tg';s.textContent='ℹ️';s.onclick=function(e){e.stopPropagation();open[id]=!open[id];k.classList.toggle('open',open[id])};
+  b.after(s)}})}
+function nums(){main.querySelectorAll('.v').forEach(function(el){var n=num(el.textContent);if(n===null)return;
+ var lab=el.previousElementSibling&&el.previousElementSibling.textContent||'',key=lab+'|'+(el.closest('.c')&&el.closest('.c').querySelector('b')||{}).textContent,o=prev[key];prev[key]=n;
+ if(o===undefined||o===n)return;
+ el.classList.add(n>o?'fup':'fdn');var t0=performance.now(),d=700;
+ (function st(t){var p=Math.min(1,(t-t0)/d);busy=true;el.textContent=fmt(o+(n-o)*(1-Math.pow(1-p,3)));setTimeout(function(){busy=false},0);if(p<1)requestAnimationFrame(st);else el.textContent=fmt(n)})(t0)})}
+function run(){raf=0;if(busy)return;chips();nums()}
+new MutationObserver(function(){if(!raf&&!busy)raf=requestAnimationFrame(run)}).observe(main,{childList:true,subtree:true});run();
+})();
+</script></body></html>
