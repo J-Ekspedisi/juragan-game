@@ -1359,10 +1359,10 @@ function el(){let e=document.getElementById('cc');if(!e){e=document.createElemen
 window.newDlg=function(i){st.i=i;st.g='pria';st.l=LKEYS[0];st.c=CLR[0];st.cap=1e8;
 const e=el(),lb=t=>'<div class="lb" style="margin-bottom:8px">'+t+'</div>';
 e.innerHTML='<div class="cd"><div class="hero"><div class="av" id="ccav">'+AV('pria')+'<div class="bdg" id="ccbd">'+logoH(st.l,32)+'</div></div></div><h1>Mulai Perusahaan</h1><p class="ds">Bangun kerajaan ekspedisimu dari nol dan jadilah juragan nomor satu di Indonesia.</p>'
-+'<div class="fd" id="f1"><label for="ccn">Nama CEO</label><input id="ccn" maxlength="20" autocomplete="off" placeholder="Nama kamu" value="Pemilik"></div><div class="em" id="e1"></div>'
++'<div class="fd" id="f1"><label for="ccn">Nama CEO</label><input id="ccn" maxlength="20" autocomplete="off" placeholder="Contoh: Budi Santoso"></div><div class="em" id="e1"></div>'
 +'<div>'+lb('Karakter')+'<div class="row r2" id="ccg">'+[['pria','Pria'],['wanita','Wanita']].map((x,k)=>'<button type="button" class="ch gd'+(k?'':' on')+'" data-g="'+x[0]+'">'+AV(x[0])+x[1]+'</button>').join('')+'</div></div>'
-+'<div class="fd" id="f2"><label for="ccc">Nama Perusahaan Ekspedisi</label><input id="ccc" maxlength="30" autocomplete="off" placeholder="Contoh: Juragan Express" value="Juragan Express"></div><div class="em" id="e2"></div>'
-+'<div class="fd"><label for="ccs">Slogan (opsional)</label><input id="ccs" maxlength="40" autocomplete="off" value="Cepat, Aman, Terpercaya"></div>'
++'<div class="fd" id="f2"><label for="ccc">Nama Perusahaan Ekspedisi</label><input id="ccc" maxlength="30" autocomplete="off" placeholder="Contoh: Juragan Express"></div><div class="em" id="e2"></div>'
++'<div class="fd"><label for="ccs">Slogan (opsional)</label><input id="ccs" maxlength="40" autocomplete="off" placeholder="Contoh: Cepat, Aman, Terpercaya"></div>'
 +'<div>'+lb('Logo Perusahaan')+'<div class="row r5" id="ccl">'+LKEYS.map((l,k)=>'<button type="button" class="ch lgc'+(k?'':' on')+'" data-l="'+l+'" aria-label="Logo '+(k+1)+'">'+logoH(l,40)+'</button>').join('')+'</div></div>'
 +'<div>'+lb('Warna Border Avatar')+'<div class="sws" id="ccw">'+CLR.map((c,k)=>'<button type="button" class="sw ch'+(k?'':' on')+'" data-c="'+c+'" style="background:'+c+'" aria-label="Warna '+(k+1)+'"></button>').join('')+'</div></div>'
 +'<div>'+lb('Latar Belakang')+'<div class="tms" id="cct">'+temaH()+'</div></div>'
