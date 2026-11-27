@@ -1947,15 +1947,15 @@ html body .vc>div:has(>button)>.b{width:100%;margin:0;min-height:38px;padding:6p
 </style>
 <style>
 /* === Patch: kurangi teks + animasi === */
-.c{animation:cin .35s ease both}@keyframes cin{from{opacity:0;transform:translateY(8px)}}
+@keyframes cin{from{opacity:0;transform:translateY(8px)}}
 .b{transition:transform .12s,filter .12s}.b:active{transform:scale(.94);filter:brightness(1.15)}
-nav button{transition:color .2s,transform .15s}nav button.on span{animation:nb .5s ease}@keyframes nb{40%{transform:translateY(-4px) scale(1.25)}}
+nav button{transition:color .2s,transform .15s}
 .fup{animation:fu 1s ease}@keyframes fu{0%{color:var(--gr);transform:scale(1.12)}100%{transform:none}}
 .fdn{animation:fd 1s ease}@keyframes fd{0%{color:var(--rd);transform:scale(1.12)}100%{transform:none}}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.chips span{background:var(--bg);border:1px solid var(--bd);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600;color:var(--tx)}
 .tg{cursor:pointer;display:inline-block;margin-left:6px;font-size:13px;opacity:.7;user-select:none}
-.k.cp{display:none}.k.cp.open{display:block;animation:cin .25s ease}
-@media(prefers-reduced-motion:reduce){.c,.b,nav button span,.fup,.fdn{animation:none!important}}
+.k.cp:not(.open){display:none!important}.k.cp.open{display:block!important;animation:cin .25s ease}.nodata{text-align:center;padding:18px 0;color:var(--mu);font-size:13px}
+@media(prefers-reduced-motion:reduce){.b,.fup,.fdn,.k.cp.open{animation:none!important}}
 </style>
 <script>
 (function(){
@@ -1968,9 +1968,9 @@ function chips(){main.querySelectorAll('.k').forEach(function(k){
  var t=k.textContent;
  if(/Antre pickup/.test(t)&&!k.dataset.ch){var q=/Antre pickup (\d+)/.exec(t),g=/Gudang (\d+\/\d+)/.exec(t),r=/Rute berjalan (\d+)/.exec(t);
   if(q&&g&&r){k.dataset.ch=1;k.outerHTML='<div class="chips" data-ch="1"><span>📥 '+q[1]+'</span><span>🏭 '+g[1]+'</span><span>🧭 '+r[1]+'</span></div>'}return}
- if(k.dataset.ch||k.closest('.g')||k.closest('table')||k.previousElementSibling&&k.previousElementSibling.classList.contains('cp'))return;
+ if(k.dataset.ch||k.classList.contains('cp')||k.closest('.g')||k.closest('table')||k.previousElementSibling&&k.previousElementSibling.classList.contains('cp'))return;
  if(t.length>70&&k.parentElement&&k.parentElement.classList.contains('c')){
-  var id=t.slice(0,40),b=k.parentElement.querySelector(':scope>b');if(!b)return;
+  var id=t.slice(0,40),b=k.parentElement.querySelector(':scope>b');if(!b||(b.nextElementSibling&&b.nextElementSibling.classList.contains('tg')))return;
   k.classList.add('cp');if(open[id])k.classList.add('open');
   var s=document.createElement('span');s.className='tg';s.textContent='ℹ️';s.onclick=function(e){e.stopPropagation();open[id]=!open[id];k.classList.toggle('open',open[id])};
   b.after(s)}})}
@@ -1979,7 +1979,9 @@ function nums(){main.querySelectorAll('.v').forEach(function(el){var n=num(el.te
  if(o===undefined||o===n)return;
  el.classList.add(n>o?'fup':'fdn');var t0=performance.now(),d=700;
  (function st(t){var p=Math.min(1,(t-t0)/d);busy=true;el.textContent=fmt(o+(n-o)*(1-Math.pow(1-p,3)));setTimeout(function(){busy=false},0);if(p<1)requestAnimationFrame(st);else el.textContent=fmt(n)})(t0)})}
-function run(){raf=0;if(busy)return;chips();nums()}
-new MutationObserver(function(){if(!raf&&!busy)raf=requestAnimationFrame(run)}).observe(main,{childList:true,subtree:true});run();
+try{if(typeof chart2=='function'){var _c2=chart2;chart2=function(){var r=_c2.apply(this,arguments),ok=false;String(r).replace(/<rect class="gb"[^>]*height="([\d.]+)"/g,function(a,b){if(parseFloat(b)>0.5)ok=true});return ok?r:'<div class="nodata">📊 Belum ada data pengiriman</div>'+String(r).replace(/^[\s\S]*<\/svg>/,'')}}}catch(e){}
+var mo=new MutationObserver(function(){if(!raf&&!busy)raf=requestAnimationFrame(run)});function ob(){mo.observe(main,{childList:true,subtree:true})}
+function run(){raf=0;if(busy)return;mo.disconnect();try{chips();nums()}catch(e){}ob()}
+ob();run();
 })();
 </script></body></html>
