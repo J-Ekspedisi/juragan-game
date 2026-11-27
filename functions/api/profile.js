@@ -1,10 +1,12 @@
 // GET  /api/profile?uid=JE-XXXXXX  -> {gem, own, eq, v, h}
-// POST /api/profile {uid, act:'buy'|'eq'|'av'|'delav', i?, d?}
+// POST /api/profile {uid, act:'buy'|'eq'|'av'|'delav'|'cash'|'spend', i?, d?, k?}
 // Data disimpan di KV binding RANK, kunci "u:<uid>". Avatar di "a:<hash publik>".
 const UID = /^JE-[ABCDEFGHJKLMNPQRSTUVWXYZ2-9]{6}$/;
 const PRICE = [500, 300, 150, 400, 800, 350, 250, 600, 450, 200]; // harus sama dengan FR di index.html
 // paket uang game: [harga diamond, jumlah rupiah]. Harus sama dengan CP di index.html
 const CASH = [[100, 5e8], [350, 2e9], [800, 5e9], [1500, 1e10], [6500, 5e10]];
+// fitur premium: [kode] = harga diamond. Harus sama dengan PR di index.html
+const SPEND = { ins: 80, shield: 60, speed: 40, grace: 50 };
 const IMG = /^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+\/=]+$/;
 const MAX_AV = 150000;
 
@@ -60,6 +62,11 @@ export async function onRequestPost({ request, env }) {
     if (!Number.isInteger(i) || i < 0 || i >= CASH.length) return J({ err: 'bad item' }, 400);
     if (p.gem < CASH[i][0]) return J({ err: 'gem' }, 402);
     p.gem -= CASH[i][0]; grant = CASH[i][1];
+  } else if (b.act === 'spend') {
+    const k = String(b.k || '');
+    if (!Object.prototype.hasOwnProperty.call(SPEND, k)) return J({ err: 'bad item' }, 400);
+    if (p.gem < SPEND[k]) return J({ err: 'gem' }, 402);
+    p.gem -= SPEND[k];
   } else if (b.act === 'av') {
     const d = String(b.d || '');
     if (d.length > MAX_AV || !IMG.test(d)) return J({ err: 'bad image' }, 400);
