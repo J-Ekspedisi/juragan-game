@@ -471,7 +471,7 @@ G.veh.forEach(v=>{if((v.type=='pesawat'||v.type=='kapal')&&v.c>=20&&G.pkgs.some(
 let cpM=0;if(work)G.staff.filter(s=>s.on&&RL[s.role].mit).forEach(s=>{cpM+=Math.ceil(VT.motor.cap/3*(.6+s.prod/100)*tm(s,'sp')*(s.en<50?.7:1))});cp+=cpM;G.mSh=cp>0?cpM/cp:0;
 let sc=work?(2+4*adminCov())+G.staff.filter(s=>s.on&&s.role=='sortir').reduce((a,s)=>a+Math.round(8*s.prod/70),0):0;
 const wc=G.wh.reduce((a,w)=>a+w.cap,0);sc=Math.floor(sc*sortF());let wu=G.pkgs.filter(p=>[2,3,5].includes(p.st)).length,pk=cp;
-if(h>=6&&h<22){const dm=(G.fx.dem&&G.fx.dem.u>G.t?G.fx.dem.m:1)*seasonM()*(window.mkM?mkM():1),sh=share();let lam=(1.5+G.branches.reduce((a,c)=>a+(CT[c]?CT[c][2]:5),0)*.14+Math.min(G.lvl,8)*.3)*cl(sh/.25,.35,1.8)*dm*(1+.08*Math.min(4,(G.hubs||[]).length))*(.6+G.rep/100)*Math.pow(1/G.pm,1.2);if(G.contract)lam+=G.contract.vol/G.contract.dur/16;let n=Math.floor(lam)+(R()<lam%1?1:0);for(;n>0&&G.pkgs.filter(p=>p.st==0).length<300;n--)mkPkg()}
+if(h>=6&&h<22){const dm=(G.fx.dem&&G.fx.dem.u>G.t?G.fx.dem.m:1)*seasonM()*(window.mkM?mkM():1),sh=share();let lam=(1.5+G.branches.reduce((a,c)=>a+(CT[c]?CT[c][2]:5),0)*.14+Math.min(G.lvl,8)*.3)*cl(sh/.25,.35,1.8)*dm*(1+.08*Math.min(4,(G.hubs||[]).length))*(G.rep<50?Math.max(.6,1.1-(50-G.rep)*.014):.6+G.rep/100)*Math.pow(1/G.pm,1.2);if(G.contract)lam+=G.contract.vol/G.contract.dur/16;let n=Math.floor(lam)+(R()<lam%1?1:0);for(;n>0&&G.pkgs.filter(p=>p.st==0).length<300;n--)mkPkg()}
 if(h>=6&&h<22&&G.intl.length&&G.veh.some(v=>(v.type=='pesawat'||v.type=='kapal')&&v.c>=20)&&R()<Math.min(.9,.3*G.intl.length*(.6+G.rep/100)))mkIntl();const fin=[];
 G.pkgs.forEach(p=>{switch(p.st){
 case 0:if(pk>0){pk--;adv(p,1)}else if(++p.wait>48){adv(p,9);G.failed++;G.rep-=.15;fin.push(p)}break;
@@ -483,7 +483,7 @@ case 5:if(pk>0){pk--;wu--;adv(p,6)}break;
 case 6:{if(p.fc)p.tf=Math.round(p.fc*(G.fxr[p.cur]||1));const late=G.t>p.est,r=R();if(r<.006){adv(p,10);G.failed++;tx('Kompensasi','Paket hilang/rusak '+p.id,-Math.min(500e3,p.tf*3));G.rep-=1;fin.push(p)}
 else if(r<.1-(G.rep-50)/500-carefulB()+(G.lvl>3?0:.02)-(p.hub?.02:0)){adv(p,8);G.rep-=.2}
 else{adv(p,7);if(p.cu)tx('Bea Cukai','Bea cukai '+p.id+' ('+p.d+')',-Math.round(p.tf*p.cu*(G.fx.cu&&G.fx.cu.u>G.t?G.fx.cu.m:1)));tx('Pendapatan '+p.s,'Resi '+p.id+' '+p.o+'-'+p.d,p.tf);if(p.con&&G.contract){G.contract.done++;tx('Pendapatan Kontrak','Bonus kontrak '+G.contract.n,Math.round(p.tf*.2))}
-G.byS[p.s]=(G.byS[p.s]||0)+p.tf;G.mAcc=(G.mAcc||0)+3000*(G.mSh||0);G.delivered++;if(late)G.lateN=(G.lateN||0)+1;G.xp+=1;G.mDay++;G.mWk++;G.rating=G.rating*.98+(late?2.5:5)*.02;G.rep+=late?-.04:.05;
+G.byS[p.s]=(G.byS[p.s]||0)+p.tf;G.mAcc=(G.mAcc||0)+3000*(G.mSh||0);G.delivered++;if(late)G.lateN=(G.lateN||0)+1;G.xp+=late?.4:1;G.mDay++;G.mWk++;G.rating=G.rating*.98+(late?2.5:5)*.02;G.rep+=late?-.065:.05;
 if(late&&(p.s=='Express'||p.s=='Same Day'))tx('Kompensasi','Keterlambatan '+p.id,-Math.round(p.tf*.3));fin.push(p)}break}
 case 8:adv(p,9);fin.push(p)}});
 G.pkgs=G.pkgs.filter(p=>!fin.includes(p));G.recent=fin.concat(G.recent).slice(0,30);
@@ -504,7 +504,7 @@ if(G.neg>=14&&!G.over){G.over=true;modal('<h2>💥 Bangkrut</h2><p>Kas negatif s
 ACH.forEach(a=>{if(!G.ach[a[0]]&&a[2](G)){G.ach[a[0]]=1;G.xp+=200;log('Prestasi: '+a[1])}});
 LM.forEach(l=>{if(!G.lm[l[0]]&&l[2](G)){G.lm[l[0]]=1;tx('Hadiah','Misi: '+l[1],l[3]);G.xp+=l[4];log('Misi selesai: '+l[1])}});
 const nl=1+Math.floor(Math.sqrt(G.xp/150));if(nl>G.lvl){G.lvl=nl;log('Naik ke level '+nl)}
-if(G.pev==null&&!G.over&&R()<.18){G.pev=pickEv();showEv()}
+if(G.pev==null&&!G.over&&!sibuk()&&Math.floor(G.t/24)-(G.evAkhir||-9)>=4&&R()<.18){G.evAkhir=Math.floor(G.t/24);G.pev=pickEv();showEv()}
 save()}
 function monthEnd(){const sal=G.staff.reduce((a,s)=>a+s.sal,0);if(sal)tx('Gaji','Gaji bulanan '+G.staff.length+' karyawan',-sal);try{allocSal(sal)}catch(e){}
 tx('Asuransi','Premi asuransi armada',-fleetVal()*.003);
@@ -540,12 +540,12 @@ function setTema(k,el){if(!TEMA[k])return;document.documentElement.setAttribute(
 function temaH(){const c=curTema();return Object.keys(TEMA).map(k=>'<button type="button" class="tm'+(k==c?' on':'')+'" data-k="'+k+'" onclick="setTema(\''+k+'\')"><i>'+TEMA[k].c.map(x=>'<b style="background:'+x+'"></b>').join('')+'</i>'+TEMA[k].e+' '+TEMA[k].n+'</button>').join('')}
 function temaCard(){return '<div class="c"><b>🎨 Tema Warna</b><div class="k">Pilih warna yang nyaman di mata Anda.</div><div id="tm">'+temaH()+'</div></div>'}
 
-function banner(){try{const v=G.veh.length,d=G.delivered||0,mis=G.contract?'Kontrak aktif':'Siap ambil kontrak';return '<div class="bn"><svg viewBox="0 0 220 110" aria-hidden="true"><rect x="0" y="86" width="220" height="24" fill="#0003"/><rect x="18" y="38" width="86" height="50" fill="#fff" opacity=".9"/><path d="M12 40 61 14l49 26z" fill="#F0A43A"/><rect x="30" y="58" width="22" height="30" fill="#2376A8"/><rect x="60" y="58" width="22" height="30" fill="#2376A8"/><rect x="118" y="60" width="62" height="26" rx="3" fill="#F0A43A"/><rect x="180" y="68" width="24" height="18" rx="3" fill="#fff"/><circle cx="136" cy="88" r="7" fill="#14283F"/><circle cx="190" cy="88" r="7" fill="#14283F"/><rect x="126" y="48" width="16" height="12" fill="#fff" opacity=".8"/></svg><div class="bt"><b>'+esc(G.name)+'</b><span>Level '+G.lvl+' · '+mis+'</span><div class="bs2"><i><b>'+v+'</b>Armada</i><i><b>'+d+'</b>Terkirim</i><i><b>'+Math.round(G.rep)+'</b>Reputasi</i></div></div></div>'}catch(e){return ''}}
+function banner(){try{const v=G.veh.length,d=G.delivered||0,mis=G.contract?'Kontrak aktif':'Siap ambil kontrak';return '<div class="bn"><svg viewBox="0 0 220 110" aria-hidden="true"><rect x="0" y="86" width="220" height="24" fill="#0003"/><rect x="18" y="38" width="86" height="50" fill="#fff" opacity=".9"/><path d="M12 40 61 14l49 26z" fill="#F0A43A"/><rect x="30" y="58" width="22" height="30" fill="#2376A8"/><rect x="60" y="58" width="22" height="30" fill="#2376A8"/><rect x="118" y="60" width="62" height="26" rx="3" fill="#F0A43A"/><rect x="180" y="68" width="24" height="18" rx="3" fill="#fff"/><circle cx="136" cy="88" r="7" fill="#14283F"/><circle cx="190" cy="88" r="7" fill="#14283F"/><rect x="126" y="48" width="16" height="12" fill="#fff" opacity=".8"/></svg><div class="bt"><b>'+esc(G.name)+'</b><span>Level '+G.lvl+' · '+mis+'</span><div class="bs2"><i><b>'+d+'</b>Terkirim</i></div></div></div>'}catch(e){return ''}}
 function newDlg(i){nf={c:CLR[0],l:LKEYS[0]};modal('<h2>Perusahaan Baru (Slot '+i+')</h2><input id="nn" placeholder="Nama perusahaan" value="Juragan Express"><input id="no" placeholder="Nama pemilik" value="Pemilik"><input id="ns" maxlength="40" placeholder="Slogan (opsional)" value="Cepat, Aman, Terpercaya"><div>Logo:</div><div id="lg">'+LKEYS.map((l,i)=>'<span class="lo'+(i?'':' on')+'" data-l="'+l+'" onclick="pk(\'l\',this)">'+logoH(l,44)+'</span>').join('')+'</div><div>Warna:</div><div id="cw">'+CLR.map(c=>'<span class="sw" style="background:'+c+'" data-c="'+c+'" onclick="pk(\'c\',this)"></span>').join('')+'</div><div>Tema:</div><div id="tm">'+temaH()+'</div><p class="k">Mulai di Jakarta dengan modal '+rp(cfg.cap)+'.</p><button class="b" onclick="startNew('+i+')">Mulai</button><button class="b s" onclick="closeM()">Batal</button>')}
 function pk(t,el){const k=t=='l'?'.lo':'.sw';document.querySelectorAll('#modal '+k).forEach(x=>x.classList.remove('on'));el.classList.add('on');nf[t]=t=='l'?el.dataset.l:el.dataset.c}
 function startNew(i){if(ld('etid_s'+i)&&!confirm('Slot terisi. Timpa?'))return;slot=i;newGame({seed:Date.now()%2147483647,name:($('#nn').value||'Ekspedisi').slice(0,30),owner:($('#no').value||'Pemilik').slice(0,30),logo:nf.l,color:nf.c,slogan:($('#ns')?$('#ns').value:'').trim().slice(0,40)});save();closeM();$('#menu').classList.remove('on');page='home';render();tutorial(0)}
 const TUT=[['📦 Cara kerja','Paket masuk otomatis. Kurir dan kendaraan sehat memprosesnya pada jam kerja (07–19). Gudang yang penuh menahan paket.'],
-['🧭 Menu','<b>Beranda</b>: masalah aktif dan laporan. <b>Operasi</b>: paket, armada, staf, gudang, rute, peta. <b>Ekspansi</b>: cabang, hub, pasar internasional, kontrak. <b>Keuangan</b>: kas, laba rugi, tarif, pinjaman, investasi. <b>Misi</b>: masalah aktif, babak, rutin, pencapaian. <b>Lainnya</b>: analitik dan pengaturan. Titik merah berarti ada yang perlu ditangani.'],
+['🧭 Menu','<b>Beranda</b>: masalah aktif dan laporan. <b>Operasi</b>: paket, armada, staf, gudang, rute, peta. <b>Ekspansi</b>: cabang, hub, pasar internasional, kontrak. <b>Keuangan</b>: kas, laba rugi, tarif, pinjaman, investasi. <b>Misi</b> (tombol di bawah Beranda): masalah aktif, babak, rutin, pencapaian. <b>Lainnya</b>: analitik dan pengaturan. Titik merah berarti ada yang perlu ditangani.'],
 ['🔎 Masalah berantai','Baca petunjuknya (bisa keliru), lalu selidiki dengan biaya atau langsung pilih tindakan. Tiap tindakan punya efek samping dan hasilnya keluar 3 hari kemudian. Kalau meleset, masih ada satu kesempatan. Kalau didiamkan 7 hari, dianggap gagal.'],
 ['📈 Babak perusahaan','UMKM → Regional → Nasional → Siap Go Public. Syaratnya ada di menu Misi. Naik babak memberi hadiah dan membuka masalah baru.'],
 ['💰 Jaga kas','Gaji, pajak, dan cicilan dibayar tiap 30 hari. Kas negatif 14 hari berarti bangkrut. Game tersimpan otomatis tiap hari dalam permainan.']];
@@ -562,7 +562,7 @@ let SVW=0;const LAST={};function setHtml(sel,h){if(LAST[sel]===h)return;LAST[sel
 function render(tick){if(!G)return;if(tick){const a=document.activeElement;if(a&&a.closest&&a.closest('#main')&&/^(SELECT|INPUT|TEXTAREA)$/.test(a.tagName))return}ens();document.documentElement.style.setProperty('--co',G.color);
 const act=G.staff.filter(s=>s.on).length;
 const hTop='<div class="lg">'+logoH(G.logo,34)+'</div><div class="ti"><b>'+esc(G.name)+'</b>'+(G.slogan?'<small class="slg">'+esc(G.slogan)+'</small>':'')+'<small>CEO '+esc(G.owner||'')+' · Level '+G.lvl+' · '+date(G.t)+'</small><div class="xp"><i style="width:'+xpPct()+'%"></i></div></div><span class="ibs"><button class="ib" data-s="open" onclick="ntf()" aria-label="Notifikasi">🔔</button><button class="ib" data-s="open" onclick="goProfil()" aria-label="Profil">👤</button><button class="ib" data-s="open" onclick="goMore(\'set\')" aria-label="Pengaturan">⚙️</button></span><div class="st"><button class="sd" data-s="open" onclick="goMore(\'fin\')"><small>Saldo ›</small><b class="'+(G.cash<0?'rd':'')+'">'+rp(G.cash)+'</b></button><div><small>Reputasi</small><b>'+Math.round(G.rep)+'/100</b></div></div><div class="sp">'+[0,1,3].map(s=>'<button class="b'+(speed==s?'':' s')+'" onclick="speed='+s+';render()">'+(s?s+'x':'⏸')+'</button>').join('')+'</div>';
-const hNav=PG.map(p=>'<button data-s="open" class="'+(page==p[0]||(p[0]=='more'&&page=='misi')?'on':'')+'"'+(window.navAttr?navAttr(p[0]):'')+' onclick="go(\''+p[0]+'\')"><span>'+p[1]+'</span>'+p[2]+navBadge(p[0])+'</button>').join('');
+const hNav=PG.map(p=>'<button data-s="open" class="'+(page==p[0]||(p[0]=='more'&&['misi','rank','toko'].includes(page))?'on':'')+'"'+(window.navAttr?navAttr(p[0]):'')+' onclick="go(\''+p[0]+'\')"><span>'+p[1]+'</span>'+p[2]+navBadge(p[0])+'</button>').join('');
 const hMain=(P[page]||P.home)(act);setHtml('#top',hTop);setHtml('#nav',hNav);setHtml('#main',(page=='home'?banner():'')+(window.tipCard?tipCard(page):'')+hMain)}
 const card=(k,v,c)=>'<div class="c"><div class="k">'+k+'</div><div class="v '+(c||'')+'">'+v+'</div></div>';
 const tbl=(h,r)=>'<div class="sc'+(h.length>2?' kt':'')+'"><table><tr>'+h.map(x=>'<th>'+x+'</th>').join('')+'</tr>'+r.map(x=>'<tr>'+x.map((y,i)=>'<td data-l="'+String(h[i]==null?'':h[i]).replace(/<[^>]*>/g,'').replace(/"/g,'&quot;')+'">'+y+'</td>').join('')+'</tr>').join('')+'</table></div>';
@@ -973,12 +973,12 @@ const mk0=mkPkg;mkPkg=function(){ens();const n=G.pkgs.length;mk0();if(G.pkgs.len
 function cmpTick(){ens();const C=G.cmp,d=Math.floor(G.t/24),s=curSeason(),id=s?s.id:'';
 if(id!==C.ss){C.ss=id;if(s){log('🎉 Musim: '+s.n);toast('🎉 '+s.n,'gold');if(s.leave)G.staff.forEach(x=>{if(R()<(prepOf(s)?.1:s.leave)){x.leave=ri(3,5);x.sick=0}})}}
 if(s&&s.m>1&&!prepOf(s)&&q7()>40)G.rep=cl(G.rep-.4,0,100);
-if(inRain(doy8())&&G.pev==null&&!G.over&&R()<.05){G.pev=0;showEv()}
+if(inRain(doy8())&&!sibuk()&&G.pev==null&&!G.over&&R()<.05){G.pev=0;showEv()}
 if(C.war&&G.t>=C.war.u){const c=G.comp.find(x=>x.n==C.war.n);if(c)c.pr=C.war.old;log('Perang harga '+C.war.n+' berakhir');C.war=null}
-if(d%7==3){if(G.comp.length&&!G.comp.some(canAcq)&&R()<.08){const c=pick(G.comp);c.krisis=G.t+504;c.rep=cl(c.rep-8,30,95);log('📉 '+c.n+' krisis keuangan: bisa diakuisisi selama 3 minggu');toast('📉 '+c.n+' krisis','gold')}const r=R();if(!C.war&&r<.2&&G.comp.length){const c=pick(G.comp);C.war={n:c.n,old:c.pr,u:G.t+336};c.pr=.8;log('💥 Perang harga: '+c.n+' banting tarif 0,80x selama 14 hari');toast('💥 Perang harga: '+c.n,'')}
-else if(r<.5&&Object.values(C.siege).filter(x=>x.u>G.t).length<2){const k=[];G.comp.forEach(c=>c.br.forEach(b=>{if(G.branches.includes(b)&&!(C.siege[b]&&C.siege[b].u>G.t))k.push([b,c.n])}));if(k.length){const x=pick(k);C.siege[x[0]]={c:x[1],u:G.t+504};log('🏴 '+x[1]+' menyerbu '+x[0]+': pesanan dari kota itu berkurang 3 minggu');toast('🏴 '+x[1]+' menyerbu '+x[0],'')}}
+if(d%7==3){if(G.comp.length&&!G.comp.some(canAcq)&&R()<.08){const c=pick(G.comp);c.krisis=G.t+504;c.rep=cl(c.rep-8,30,95);log('📉 '+c.n+' krisis keuangan: bisa diakuisisi selama 3 minggu');toast('📉 '+c.n+' krisis','gold')}const r=R();if(!sibuk()&&!C.war&&r<.2&&G.comp.length){const c=pick(G.comp);C.war={n:c.n,old:c.pr,u:G.t+336};c.pr=.8;log('💥 Perang harga: '+c.n+' banting tarif 0,80x selama 14 hari');toast('💥 Perang harga: '+c.n,'')}
+else if(!sibuk()&&r<.5&&Object.values(C.siege).filter(x=>x.u>G.t).length<2){const k=[];G.comp.forEach(c=>c.br.forEach(b=>{if(G.branches.includes(b)&&!(C.siege[b]&&C.siege[b].u>G.t))k.push([b,c.n])}));if(k.length){const x=pick(k);C.siege[x[0]]={c:x[1],u:G.t+504};log('🏴 '+x[1]+' menyerbu '+x[0]+': pesanan dari kota itu berkurang 3 minggu');toast('🏴 '+x[1]+' menyerbu '+x[0],'')}}
 const free=['Gesit Logistik','Rajawali Kirim','Nusa Cepat','Sigap Antar','Bintang Cargo','Merpati Paket','Samudra Kirim','Garuda Antar'].filter(n=>!G.comp.some(c=>c.n==n)&&!((G.inv&&G.inv.subs)||[]).some(x=>x.n==n));if(free.length&&G.comp.length<3&&R()<.3){G.comp.push({n:pick(free),cash:1.5e8,fl:10,br:['Jakarta',pick(Object.keys(CT))],rep:55,pr:1});log('Kompetitor baru muncul')}}
-if(G.pev==null&&C.q.length&&C.q[0].d<=d){const i=EV.findIndex(e=>e.n==C.q.shift().e);if(i>=0){G.pev=i;showEv()}}}
+if(!sibuk()&&G.pev==null&&C.q.length&&C.q[0].d<=d){const x=C.q.shift();const i=EV.findIndex(e=>e.n==x.e);if(i>=0){G.pev=i;showEv()}}}
 const pt0=probTick;probTick=function(){pt0();cmpTick()};
 function fightSiege(c){ens();const x=G.cmp.siege[c],k=10e6*evScale();if(!x||x.u<=G.t)return msg('Tidak ada serangan');if(G.cash<k)return msg('Kas tidak cukup');tx('Event','Kampanye lawan '+x.c+' di '+c,-k);x.u=0;G.rep=cl(G.rep+1,0,100);log('Serangan '+x.c+' di '+c+' dipatahkan');SM.play('confirm');toast('✔ Serangan dipatahkan','ok');render()}
 function acq(n){ens();const i=G.comp.findIndex(c=>c.n==n);if(i<0)return;const c=G.comp[i],k=1e8+4e6*c.fl;if(G.cash<k)return msg('Kas tidak cukup');tx('Aset','Akuisisi '+n,-k);G.comp.splice(i,1);G.cmp.acq=Math.min(4,G.cmp.acq+1);for(let j=0;j<Math.min(8,Math.ceil(c.fl/2));j++)G.veh.push(mkVeh('motor'));G.rep=cl(G.rep+3,0,100);G.xp+=500;if(G.inv&&G.inv.sh[n]){const h=G.inv.sh[n];cashBack(rnd1(compVal(c)*h.pct/100),h.cost,'saham '+n);delete G.inv.sh[n]}log('Akuisisi '+n+' selesai');SM.play('level');toast('🏁 '+n+' diakuisisi','gold');render()}
@@ -1708,7 +1708,7 @@ modal('<h2>👑 Juragan Eksklusif</h2><p class="k">Terima kasih sudah mendukung!
 window.supRestore=()=>modal('<h2>♻️ Pakai ID lama</h2><p class="k">Ganti perangkat atau data browser terhapus? Masukkan ID lamamu agar status Juragan Eksklusif kembali. ID ini akan menggantikan ID di perangkat ini.</p><input id="supu" placeholder="JE-XXXXXX" autocomplete="off" autocapitalize="characters" maxlength="12"><button class="b" onclick="supRestoreGo()">Pulihkan</button><button class="b s" onclick="supOpen()">Batal</button>');
 window.supRestoreGo=async()=>{const r=($('#supu').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');const u='JE-'+r.slice(2);if(r.slice(0,2)!=='JE'||!UR.test(u)){toast('Format ID tidak valid','');return}sv(UK,u);window.tkSync&&tkSync(true);if(!await sync(true))supOpen()};
 window.supAva=()=>{if(!st())return;const has=!!ld(IK),zv=gp(ZK,100),fr=gp(FK,'1')!='0';
-modal('<h2>🖼️ Avatar dan bingkai</h2><div style="text-align:center"><span id="supprev" style="display:inline-block;width:150px;height:150px">'+logoH('plusimg',150)+'</span></div><input type="file" id="supf" accept="image/*" onchange="supImg(this)"><div class="k">Gambar dipotong persegi dari tengah.</div>'+(has?'<div class="k" style="margin-top:8px">Zoom <b id="supzv">'+zv+'%</b></div><input type="range" min="50" max="300" value="'+zv+'" oninput="supZoom(this.value,0)" onchange="supZoom(this.value,1)">':'')+'<button class="b'+(fr?'':' s')+'" onclick="supFr()">👑 Bingkai: '+(fr?'Aktif':'Mati')+'</button>'+(fr?'<button class="b'+(gp(AK,'1')!='0'?'':' s')+'" onclick="supAn()">✨ Animasi: '+(gp(AK,'1')!='0'?'Aktif':'Mati')+'</button>':'')+(has?'<button class="b d" onclick="supImgDel()">Hapus avatar</button>':'')+'<div class="k" style="margin-top:10px">Logo perusahaan</div><div><span class="lo'+(G.logo=='plusimg'?' on':'')+'" onclick="supLg(\'plusimg\')">'+logoH('plusimg',34)+'</span>'+LKEYS.map(l=>'<span class="lo'+(G.logo==l?' on':'')+'" onclick="supLg(\''+l+'\')">'+logoH(l,34)+'</span>').join('')+'</div><button class="b s" onclick="supOpen()">Kembali</button>')};
+modal('<h2>🖼️ Avatar dan bingkai</h2><div style="text-align:center"><span id="supprev" style="display:inline-block;width:150px;height:150px">'+logoH('plusimg',150)+'</span></div><input type="file" id="supf" accept="image/*" onchange="supImg(this)"><div class="k">Gambar dipotong persegi dari tengah.</div>'+(has?'<div class="k" style="margin-top:8px">Zoom <b id="supzv">'+zv+'%</b></div><input type="range" min="50" max="300" value="'+zv+'" oninput="supZoom(this.value,0)" onchange="supZoom(this.value,1)">':'')+'<button class="b'+(fr?'':' s')+'" onclick="supFr()">👑 Bingkai: '+(fr?'Aktif':'Mati')+'</button>'+(fr?'<button class="b'+(gp(AK,'1')!='0'?'':' s')+'" onclick="supAn()">✨ Animasi: '+(gp(AK,'1')!='0'?'Aktif':'Mati')+'</button>':'')+(has?'<button class="b d" onclick="supImgDel()">Hapus avatar</button>':'')+(window.tkPunya?tkPunya():'')+'<button class="b s" onclick="supOpen()">Kembali</button>')};
 const refresh=()=>{LOGOS.plusimg=mk();const e=document.getElementById('supprev');if(e)e.innerHTML=logoH('plusimg',150);if(G&&G.logo=='plusimg')render()};
 window.supImg=inp=>{const f=inp.files&&inp.files[0];if(!f||!G)return;if(!/^image\//.test(f.type)){toast('File harus berupa gambar','');return}
 const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,256,256);
@@ -1764,6 +1764,10 @@ const fx=i=>{const c=FX[i][0],pet=i==2||i==6;let o='<g aria-hidden="true">';
 document.head.appendChild(Object.assign(document.createElement('style'),{textContent:'.tkf{transform-origin:50px 50px}.tkst,.tkfl{transform-box:fill-box;transform-origin:center}.tkst{animation:tkTw 1.9s ease-in-out infinite;opacity:0}.tkfl{animation:tkFl 2.6s ease-in infinite;opacity:0}@keyframes tkTw{0%,100%{opacity:0;transform:scale(.2) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(45deg)}}@keyframes tkFl{0%{opacity:0;transform:translate(0,0) rotate(0)}15%{opacity:.95}100%{opacity:0;transform:translate(-6px,22px) rotate(160deg)}}.tkf.bob{animation:tkBob 2.4s ease-in-out infinite}@keyframes tkBob{50%{transform:translateY(-1.6px) scale(1.018)}}.tkf.glow{animation:tkGl 2.2s ease-in-out infinite}@keyframes tkGl{0%,100%{filter:drop-shadow(0 0 .5px #4fc3ff) brightness(1)}50%{filter:drop-shadow(0 0 3.5px #4fc3ff) brightness(1.15)}}.tkf.sway{animation:tkSw 3.2s ease-in-out infinite}@keyframes tkSw{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}.tkf.flap{animation:tkFp 1.3s ease-in-out infinite}@keyframes tkFp{0%,100%{transform:scale(1.035,.985)}50%{transform:scale(.985,1.015)}}.tkf.fire{animation:tkFi 1.1s steps(1,end) infinite}@keyframes tkFi{0%{filter:drop-shadow(0 0 2px #ff7a1a) brightness(1)}25%{filter:drop-shadow(0 0 4px #ffb347) brightness(1.15)}50%{filter:drop-shadow(0 0 2px #ff5a00) brightness(.97)}75%{filter:drop-shadow(0 0 5px #ffc247) brightness(1.2)}}.tkf.neon{animation:tkNe 1.7s ease-in-out infinite}@keyframes tkNe{0%,100%{filter:drop-shadow(0 0 1px #c04bff) brightness(1)}50%{filter:drop-shadow(0 0 4.5px #d36bff) brightness(1.25)}}.tkf.shine{animation:tkSh 2.6s ease-in-out infinite}@keyframes tkSh{0%,100%{filter:brightness(1);transform:translateY(0)}50%{filter:brightness(1.28) drop-shadow(0 0 2px #ffe27a);transform:translateY(-1.2px)}}.tkf.float{animation:tkFt 3.2s ease-in-out infinite}@keyframes tkFt{0%,100%{transform:translateY(1.6px) rotate(-1deg)}50%{transform:translateY(-1.8px) rotate(1deg)}}.tkf.wig{animation:tkWg 2.2s ease-in-out infinite}@keyframes tkWg{0%,55%,100%{transform:rotate(0)}10%{transform:rotate(-4deg) scale(1.02)}20%{transform:rotate(4deg) scale(1.02)}30%{transform:rotate(-3deg)}40%{transform:rotate(3deg)}}@media(prefers-reduced-motion:reduce){.tkf,.tkst,.tkfl{animation:none!important}}'}));
 const fg=(i,u)=>{const m=FR[i][2],s=(2*Math.max(m[2],m[3])*1.1/100).toFixed(4);return '<g clip-path="url(#tkC'+i+')">'+(u?'<image href="'+u+'" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid slice"':'<use href="#tkA"')+' transform="translate('+m[0]+' '+m[1]+') scale('+s+') translate(-50 -50)"/></g><g class="tkf '+FX[i][1]+'"><use href="#tkF'+i+'"/></g>'+fx(i)};
 const th=(i,w)=>'<svg viewBox="0 0 100 100" width="'+w+'" height="'+w+'" aria-hidden="true">'+fg(i)+'</svg>';
+window.tkPunya=()=>{const b=(on,klik,isi,nama)=>'<button class="b'+(on?'':' s')+'" style="margin:3px" onclick="'+klik+'">'+isi+'<br><small>'+nama+'</small></button>';
+let h='<div class="k" style="margin-top:10px">Bingkai milikmu</div><div>'+b(G.logo=='plusimg',"supLg('plusimg')",logoH('plusimg',54),'Emas Eksklusif');
+S.own.forEach(i=>{h+=b(G.logo=='shopfr'&&S.eq==i,'tkEq('+i+')',th(i,54),FR[i][0])});
+return h+'</div>'+(S.own.length?'':'<div class="k">Bingkai yang dibeli di Toko akan muncul di sini.</div>')};
 const lg=()=>{if(S.eq>=0)LOGOS.shopfr='<g class="pav">'+fg(S.eq)+'</g>';else delete LOGOS.shopfr};
 const bal=()=>'<div class="c" style="text-align:center"><div class="k">Saldo diamond</div><div style="font-size:30px;font-weight:800;line-height:1.3">'+gem(26)+' '+num(S.gem)+'</div></div>';
 const tabs=()=>'<div class="tabs"><button class="b'+(tab=='gem'?'':' s')+'" onclick="tkTab(\'gem\')">'+'💎 Diamond</button><button class="b'+(tab=='fr'?'':' s')+'" onclick="tkTab(\'fr\')">🖼️ Bingkai</button><button class="b'+(tab=='cash'?'':' s')+'" onclick="tkTab(\'cash\')">💰 Uang</button><button class="b'+(tab=='me'?'':' s')+'" onclick="tkTab(\'me\')">🎒 Saya</button></div>';
@@ -2218,7 +2222,7 @@ try{var _hm=P.home;P.home=function(a){
  if(!rkOn())return '<button class="b s" onclick="setRingkas(1)">🧹 Mode ringkas</button>'+_hm.apply(this,arguments);
  var s='';try{s+=goalCard()}catch(e){}
  try{s+=opsAnim()}catch(e){}
- try{s+='<div class="chips" style="margin:6px 0 10px"><span>📦 '+G.pkgs.length+'</span><span>🧑 '+a+'/'+G.staff.length+'</span><span>🚚 '+G.veh.length+'</span><span>🏭 '+wuse()+'/'+wcap()+'</span><span>⭐ '+G.rating.toFixed(1)+'</span><span>Lv '+G.lvl+'</span></div>'}catch(e){}
+ try{s+='<div class="chips" style="margin:6px 0 10px"><span>📦 '+G.pkgs.length+'</span><span>🧑 '+a+'/'+G.staff.length+'</span><span>🚚 '+G.veh.length+'</span><span>⭐ '+G.rating.toFixed(1)+'</span></div>'}catch(e){}
  try{s+=warns()}catch(e){}
  try{s+=actCard()}catch(e){}
  return s+'<button class="b s" style="width:100%;margin-top:6px" onclick="setRingkas(0)">📊 Tampilkan semua detail</button>'}}catch(e){}
@@ -2250,7 +2254,7 @@ const S=[
 ['#main .tabs','🗂️ Tab Operasional','Pindah antara Paket, Armada, Staf, Gudang, Rute, dan Peta lewat tab ini.'],
 [nv('eks'),'🏢 Ekspansi','Cabang, hub, pasar internasional, dan kontrak.',()=>go('eks')],
 [nv('keu'),'💰 Keuangan','Kas, laba rugi, tarif, pinjaman, dan investasi (deposito, obligasi, saham, IPO).',()=>go('keu')],
-[nv('misi'),'🎯 Misi','Masalah berantai: baca petunjuknya (bisa keliru), selidiki atau langsung pilih tindakan, hasilnya keluar 3 hari kemudian. Babak: UMKM → Regional → Nasional → Siap Go Public.',()=>go('misi')],
+[nv('more'),'🎯 Misi','Buka lewat Lainnya. Masalah berantai: baca petunjuknya (bisa keliru), selidiki atau langsung pilih tindakan, hasilnya keluar 3 hari kemudian. Babak: UMKM → Regional → Nasional → Siap Go Public.',()=>go('more')],
 [nv('more'),'☰ Lainnya','Analitik dan pengaturan. Tutorial ini bisa dibuka lagi lewat Info & Tutorial.',()=>go('more')],
 [0,'🚀 Siap bermain!','Jaga kas, rawat armada, dan tangani masalah sebelum 7 hari. Selamat memimpin!',()=>go('home')]];
 let ti=0,sp0=null,tm=0;const T=()=>document.getElementById('tour'),cm=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -2763,6 +2767,116 @@ const card=()=>{if(!G)return'';const p=pm();return '<div class="c"><b>⭐ Fitur 
  +row('speed','⚡','Percepat Pemulihan','Sortir normal lagi, staf sembuh, kendaraan diperbaiki.','')
  +row('grace','⏳','Masa Tenggang +7 hari','Mundurkan hitung mundur bangkrut 7 hari.','')+'</div>'};
 if(P.toko){const t0=P.toko;P.toko=function(){return t0.apply(this,arguments)+card()}}
+})();
+</script>
+<script>
+/* ===== Paket Misterius ===== */
+(function(){
+const ISI={antik:['🏺','Barang antik'],hadiah:['🎁','Hadiah kejutan'],terlarang:['🚨','Barang terlarang']};
+const PETUNJUK={antik:['Kotaknya berat dan dilapisi busa tebal.','Pengirim berkali-kali minta jangan dibanting.'],hadiah:['Ada pita kecil menyembul dari sudut kotak.','Pengirim minta paket tiba sebelum akhir pekan.'],terlarang:['Pengirim menolak menunjukkan identitas.','Alamat tujuan baru saja diganti dua kali.']};
+const KIRIM=['Pria bertopi hitam','Nomor tak dikenal','Kolektor dari Menteng','Perempuan berkacamata gelap','Akun tanpa nama'];
+const hari=()=>Math.floor(G.t/24);
+function ens_(){if(!G.mys)G.mys={next:hari()+3,a:null,last:'',n:0};return G.mys}
+function selesai(m,teks,ikon){m.a=null;m.next=hari()+ri(7,14);m.last=ikon+' '+teks;log('Paket Misterius: '+teks);toast(ikon+' '+teks,'')}
+function tick(){const m=ens_(),d=hari(),a=m.a;if(G.over)return;
+ if(!a){if(d<m.next||!bolehKrisis()||rvTunggu())return;const r=R(),isi=r<.4?'antik':r<.7?'hadiah':'terlarang';
+  const petunjuk=R()<.7?isi:pick(Object.keys(ISI).filter(k=>k!=isi));
+  m.a={isi,clue:pick(PETUNJUK[petunjuk]),dari:pick(KIRIM),fee:Math.round(cl(G.cash*.04,15e5,25e6)/1e5)*1e5,exp:d+3,res:0,tahu:0};m.n++;
+  log('📦 Ada tawaran Paket Misterius');toast('📦 Paket Misterius datang! Cek Beranda','gold');if(speed>1)speed=1;return}
+ if(a.res){if(d<a.res)return;
+  if(a.isi=='antik'){tx('Hadiah','Paket Misterius: ongkos + bonus',a.fee*2);G.rep=cl(G.rep+2,0,100);selesai(m,'Isinya barang antik! Kamu dapat '+rp(a.fee*2),'🏺')}
+  else if(a.isi=='hadiah'){tx('Hadiah','Paket Misterius: ongkos',a.fee);G.rep=cl(G.rep+3,0,100);selesai(m,'Hadiah kejutan sampai, penerima terharu. +'+rp(a.fee)+', reputasi +3','🎁')}
+  else{const denda=Math.round(a.fee*2.5);tx('Denda','Paket Misterius: barang terlarang',-denda);G.rep=cl(G.rep-8,0,100);selesai(m,'Digerebek! Barang terlarang. Denda '+rp(denda)+', reputasi -8','🚨')}}
+ else if(d>=a.exp)selesai(m,'Pengirim pergi. Kamu tidak akan pernah tahu isinya...','👤')}
+window.mysAct=function(x){const m=ens_(),a=m.a;if(!a||a.res||G.over)return;
+ if(x=='cek'){const c=Math.round(a.fee*.4);if(a.tahu)return;if(G.cash<c){toast('✖ Kas tidak cukup','');return}tx('Event','Selidiki Paket Misterius',-c);a.tahu=1}
+ else if(x=='terima'){a.res=hari()+2;toast('📦 Paket diterima. Hasil dalam 2 hari','ok')}
+ else if(x=='lapor'){if(!a.tahu||a.isi!='terlarang')return;G.rep=cl(G.rep+4,0,100);tx('Hadiah','Imbalan lapor polisi',a.fee*.5);selesai(m,'Kamu lapor polisi. Reputasi +4','👮')}
+ else selesai(m,'Kamu menolak paket itu.','✋');
+ save();render()};
+function kartu(){const m=ens_(),a=m.a,b=(x,t,s)=>'<button class="b'+(s?' s':'')+'" onclick="mysAct(\''+x+'\')">'+t+'</button> ';
+ if(!a)return m.last?'<div class="c"><b>📦 Paket Misterius</b><div class="k">'+m.last+'</div></div>':'';
+ let h='<div class="c" style="border:2px solid var(--or)"><b>📦 Paket Misterius</b><p>'+a.dari+' menawarkan <b>'+rp(a.fee)+'</b> untuk satu kiriman. Isinya dirahasiakan.</p>';
+ if(a.res)return h+'<div class="k">Dalam perjalanan. Hasil dalam '+Math.max(1,a.res-hari())+' hari...</div></div>';
+ h+='<div class="k">🔎 '+a.clue+' (petunjuk bisa keliru)</div>';
+ if(a.tahu)h+='<p>Hasil selidik: <b>'+ISI[a.isi][0]+' '+ISI[a.isi][1]+'</b></p>';
+ h+=b('terima','Terima')+(a.tahu?'':b('cek','Selidiki ('+rp(Math.round(a.fee*.4))+')',1))+(a.tahu&&a.isi=='terlarang'?b('lapor','Lapor polisi',1):'')+b('tolak','Tolak',1);
+ return h+'<div class="k">Hangus dalam '+Math.max(1,a.exp-hari())+' hari.</div></div>'}
+const d0=dayEnd;dayEnd=function(){d0.apply(this,arguments);tick()};
+(window.CERITA=window.CERITA||{}).mys={kartu,warna:'or',baris:()=>{const a=ens_().a;return a?(a.res?'📦 Paket Misterius: dalam perjalanan':'📦 Paket Misterius: tawaran '+rp(a.fee)):''}};
+const m0=P.misi;P.misi=function(){return m0.apply(this,arguments)+kartu()};
+})();
+</script>
+<script>
+/* ===== Rival Bayangan ===== */
+(function(){
+const RIVAL='Bayang Express';
+const T=[['sering lembur malam','selalu datang subuh'],['membawa ponsel kedua','hanya punya satu ponsel lama'],['akhir-akhir ini mendadak royal','sedang sangat berhemat']];
+const ORANG=['Pak Darto (satpam)','Mbak Lila (kasir)','Mas Reno (kepala gudang)','Bu Ratna (pembukuan)','Mas Guntur (teknisi)','Mbak Sekar (loket)'];
+const SABOT=['Klien besarmu tiba-tiba pindah ke Bayang Express.','Daftar tarifmu bocor. Bayang Express menawar tepat di bawahmu.','Jadwal kiriman bocor, satu muatan dicegat di jalan.'];
+const hari=()=>Math.floor(G.t/24);
+const HENDRA=['Sabar ya. Kehilangan klien besar itu biasa.','Daftar tarif bocor memang menyakitkan. Ganti saja pelan-pelan.','Untung cuma satu muatan yang dicegat. Jangan terlalu dipikirkan.'];
+const BONGKAR=' Malamnya Pak Hendra menelepon: "Sayang sekali, ya." Padahal kamu belum cerita apa pun. Bayang Express ternyata miliknya.';
+const acak=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=ri(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+function ens_(){if(!G.rv)G.rv={st:0,bab:0,next:0,s:[],clue:[],salah:0,dasar:0,akhir:''};return G.rv}
+function kabar(t){log('🕵️ '+t);toast('🕵️ '+t,'');if(speed>1)speed=1}
+function mulai(v){const m=[ri(0,1),ri(0,1),ri(0,1)],nama=acak(ORANG).slice(0,4);
+ /* tiap tersangka tak bersalah beda tepat satu ciri, jadi tiga petunjuk menyisakan satu orang */
+ v.s=acak(nama.map((n,i)=>({n,c:m.map((x,k)=>i==k+1?1-x:x),p:i==0?1:0,x:0})));
+ v.clue=acak([0,1,2]);v.dasar=Math.round(cl(G.cash*.05,3e6,4e7)/1e5)*1e5;v.st=1;v.bab=0;v.next=hari()}
+function bab(v){const biaya=Math.round(v.dasar*.4);tx('Event','Ulah '+RIVAL,-biaya);G.rep=cl(G.rep-2,0,100);v.bab++;v.next=hari()+7;
+ kabar('Bab '+v.bab+': '+SABOT[v.bab-1]+' Rugi '+rp(biaya))}
+function tamat(v,teks){v.st=2;v.akhir=teks;kabar(teks)}
+function tick(){const v=ens_();if(G.over||v.st==2)return;
+ if(v.st==3){if(hari()>=v.next)tamat(v,'Pak Hendra menghilang sebelum kamu bertindak. Bayang Express tutup diam-diam.');return}
+ if(!v.st){if(hari()<10||sibuk()||hari()<(G.tenang||0))return;mulai(v)}
+ if(hari()<v.next)return;
+ if(v.bab<3)bab(v);else{const d=v.dasar*2;tx('Event','Orang dalam kabur membawa data',-d);G.rep=cl(G.rep-8,0,100);tamat(v,'Orang dalam kabur: '+v.s.find(x=>x.p).n+'. Rugi '+rp(d)+'.'+BONGKAR)}}
+window.rvTuduh=function(i){const v=ens_(),s=v.s[i];if(v.st!=1||!s||s.x||G.over)return;
+ if(!confirm('Tuduh '+s.n+'? Salah tuduh ada akibatnya.'))return;
+ if(s.p){const h=Math.round(v.dasar*(3.5-.5*v.bab));tx('Hadiah','Membongkar '+RIVAL,h);G.rep=cl(G.rep+6,0,100);v.st=3;v.next=hari()+5;v.pelaku=s.n;kabar('Tepat! Hadiah '+rp(h)+'. Tapi pengakuannya mengejutkan...')}
+ else{s.x=1;v.salah++;G.rep=cl(G.rep-5,0,100);
+  if(v.salah>=2){const d=v.dasar*2;tx('Event','Orang dalam kabur membawa data',-d);tamat(v,'Dua kali salah tuduh. Pelaku ('+v.s.find(x=>x.p).n+') kabur. Rugi '+rp(d)+'.'+BONGKAR)}
+  else kabar(s.n+' tidak bersalah. Reputasi -5, sisa satu kesempatan')}
+ save();render()};
+window.rvAkhir=function(x){const v=ens_();if(v.st!=3||G.over)return;const m=v.dasar;
+ if(x=='lapor'){if(G.cash<m){toast('✖ Kas tidak cukup','');return}tx('Event','Biaya pengacara',-m);G.rep=cl(G.rep+10,0,100);tamat(v,'Pak Hendra diproses hukum. Reputasi +10.')}
+ else if(x=='damai'){tx('Hadiah','Uang damai Pak Hendra',m*4);G.rep=cl(G.rep-6,0,100);tamat(v,'Kamu terima uang damai '+rp(m*4)+'. Kabarnya bocor, reputasi -6.')}
+ else{if(G.cash<m*3){toast('✖ Kas tidak cukup','');return}tx('Aset','Ambil alih Bayang Express',-m*3);G.fx.dem={m:1.25,u:G.t+720};G.rep=cl(G.rep+2,0,100);tamat(v,'Bayang Express jadi milikmu. Order +25% selama 30 hari.')}
+ save();render()};
+function kartu(){const v=ens_();if(!v.st)return '';
+ if(v.st==3){const m=v.dasar,b=(x,t,c)=>'<button class="b'+(c?' s':'')+'" style="width:100%;margin:3px 0" onclick="rvAkhir(\''+x+'\')">'+t+'</button>';
+  return '<div class="c" style="border:2px solid var(--rd)"><b>😱 Plot twist</b><p><b>'+v.pelaku+'</b>: "Saya cuma disuruh. Bayang Express itu milik <b>Pak Hendra</b>."</p><p>Mentormu sendiri. Ingat pesan-pesannya? Kamu tidak pernah menceritakan kejadian itu kepadanya.</p>'+b('lapor','Laporkan (biaya '+rp(m)+', reputasi +10)')+b('damai','Terima uang damai '+rp(m*4)+' (reputasi -6)',1)+b('ambil','Ambil alih usahanya ('+rp(m*3)+', order +25%)',1)+'<div class="k">Putuskan dalam '+Math.max(1,v.next-hari())+' hari.</div></div>'}
+ if(v.st==2)return '<div class="c"><b>🕵️ Rival Bayangan: tamat</b><div class="k">'+v.akhir+'</div></div>';
+ let h='<div class="c" style="border:2px solid var(--rd)"><b>🕵️ Rival Bayangan · Bab '+v.bab+'/3</b><p>'+RIVAL+' selalu selangkah di depan. Ada orang dalam. Siapa?</p>';
+ v.clue.slice(0,v.bab).forEach(k=>{const p=v.s.find(x=>x.p);h+='<div class="act in" style="cursor:default"><span>🔎</span><span>Saksi: pelakunya '+T[k][p.c[k]]+'.</span></div>'});
+ if(v.bab)h+='<div class="k">💌 Pak Hendra, mentormu: "'+HENDRA[v.bab-1]+'"</div>';
+ v.s.forEach((s,i)=>{h+='<p><b>'+s.n+'</b><br><span class="k">'+s.c.map((x,k)=>T[k][x]).join(', ')+'</span><br>'+(s.x?'<span class="k">✔ Terbukti tidak bersalah</span>':'<button class="b s" onclick="rvTuduh('+i+')">Tuduh</button>')+'</p>'});
+ return h+'<div class="k">'+(v.bab<3?'Bab berikutnya':'Pelaku kabur')+' dalam '+Math.max(1,v.next-hari())+' hari. Makin cepat tepat, makin besar hadiahnya.</div></div>'}
+const d0=dayEnd;dayEnd=function(){d0.apply(this,arguments);tick()};
+(window.CERITA=window.CERITA||{}).rv={kartu,warna:'rd',baris:()=>{const v=ens_();return v.st==1?'🕵️ Rival Bayangan: Bab '+v.bab+'/3':v.st==3?'😱 Rival Bayangan: putuskan sekarang':''}};
+const m0=P.misi;P.misi=function(){return m0.apply(this,arguments)+kartu()};
+})();
+</script>
+<script>
+/* ===== Antrean krisis, Beranda ringkas, menu 5 tombol ===== */
+(function(){
+const hari=()=>Math.floor(G.t/24);
+window.sibuk=()=>!!(G&&((G.ch&&G.ch.a)||(G.mys&&G.mys.a)||(G.rv&&(G.rv.st==1||G.rv.st==3))));
+window.rvTunggu=()=>!!(G.rv&&!G.rv.st&&hari()>=10);
+window.bolehKrisis=()=>!sibuk()&&hari()>=(G.tenang||0);
+const c0=chTick;chTick=function(){ens();if(!G.ch.a&&(!bolehKrisis()||rvTunggu()))G.ch.next=Math.max(G.ch.next,chDay()+1);c0.apply(this,arguments)};
+const d0=dayEnd;dayEnd=function(){const dulu=sibuk();d0.apply(this,arguments);if(dulu&&!sibuk())G.tenang=hari()+3};
+/* cerita jadi satu baris di Beranda, rinciannya di pop-up */
+let buka=null;
+window.bukaCerita=k=>{const c=window.CERITA[k];buka=k;modal(c.kartu()+'<button class="b s" onclick="closeM()">Tutup</button>')};
+['mysAct','rvTuduh','rvAkhir'].forEach(n=>{const f=window[n];window[n]=function(){const terbuka=document.getElementById('modal').classList.contains('on');f.apply(this,arguments);if(terbuka&&buka)bukaCerita(buka)}});
+const h0=P.home;P.home=function(){let h='';Object.keys(window.CERITA).forEach(k=>{const c=window.CERITA[k],t=c.baris();if(t)h+='<button class="b s" style="width:100%;text-align:left;margin:0 0 8px;border:2px solid var(--'+c.warna+')" onclick="bukaCerita(\''+k+'\')">'+t+' ›</button>'});return h+h0.apply(this,arguments)};
+/* menu bawah 5 tombol */
+for(let i=PG.length-1;i>=0;i--)if(PG[i][0]=='rank'||PG[i][0]=='toko')PG.splice(i,1);
+const g0=P.grid;P.grid=function(){const t=(p,i,n,k)=>'<button class="c tile" style="margin:0" onclick="go(\''+p+'\')"><span>'+i+'</span>'+n+'<div class="k">'+k+'</div></button>';
+ return '<div class="g" style="margin-bottom:10px">'+t('rank','🏆','Peringkat','Mingguan')+t('toko','💎','Toko','Diamond · Bingkai')+'</div>'+g0.apply(this,arguments)};
+['rank','toko'].forEach(k=>{const f=P[k];if(f)P[k]=function(){return '<button class="b s" onclick="go(\'more\')">← Lainnya</button>'+f.apply(this,arguments)}});
 })();
 </script>
 </body></html>
